@@ -1,17 +1,20 @@
-<style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-    <item name="colorPrimary">@color/colorPrimary</item>
-    <item name="colorPrimaryDark">#FF000000</item> <!-- SİYAH -->
-    <item name="colorAccent">@color/colorAccent</item>
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
 
-    <!-- BU SATIRLAR ÇOK ÖNEMLİ -->
-    <item name="android:statusBarColor">#FF000000</item> <!-- SİYAH -->
-    <item name="android:windowLightStatusBar">false</item> <!-- BEYAZ ikonlar -->
-    <item name="android:windowLightNavigationBar">false</item>
-    
-    <!-- Transparency ile oynamayı kesinlikle engelle -->
-    <item name="android:windowTranslucentStatus">false</item>
-    <item name="android:windowTranslucentNavigation">false</item>
-    <item name="android:fitsSystemWindows">true</item>
-    <item name="android:windowIsTranslucent">false</item>
-    <item name="android:windowDrawsSystemBarBackgrounds">true</item>
-</style>
+    <!-- SADECE BU TEK STİL KALSIN, DİĞERLERİNİ SİL -->
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight.DarkActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">#FF000000</item> <!-- SİYAH -->
+        <item name="colorAccent">@color/colorAccent</item>
+
+        <!-- BU İKİ SATIR ÇOK ÖNEMLİ -->
+        <item name="android:statusBarColor">#FF000000</item> <!-- SİYAH -->
+        <item name="android:windowLightStatusBar">false</item> <!-- BEYAZ ikonlar -->
+
+        <!-- Transparency ile OYNAMA -->
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:fitsSystemWindows">true</item>
+    </style>
+
+</resources>
