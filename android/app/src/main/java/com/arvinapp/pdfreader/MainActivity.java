@@ -11,16 +11,13 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Status bar ve navigation bar siyah yap
-        getWindow().setStatusBarColor(Color.BLACK);
-        getWindow().setNavigationBarColor(Color.BLACK);
+        // Status bar ve navigation bar renklerini manuel ayarlama
+        // Bu satırlar kaldırıldı veya yorum satırı yapıldı
+        // getWindow().setStatusBarColor(Color.BLACK);
+        // getWindow().setNavigationBarColor(Color.BLACK);
 
         // İkonları beyaz yap
-        // (LIGHT_STATUS_BAR ve LIGHT_NAVIGATION_BAR kaldırıldı, böylece ikonlar beyaz kalır)
         int flags = getWindow().getDecorView().getSystemUiVisibility();
         getWindow().getDecorView().setSystemUiVisibility(flags);
-
-        // WebView artık status/navigation bar'ın üstüne düşmez, normal layout gibi davranır
-        // Tam ekran veya setDecorFitsSystemWindows(false) yok
     }
 }
