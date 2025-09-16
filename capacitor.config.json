@@ -4,6 +4,9 @@
   "webDir": "www",
   "bundledWebRuntime": false,
   "plugins": {
-    "CapacitorAndroidEdgeToEdgeSupport": {}
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#000000"
+    }
   }
 }
