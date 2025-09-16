@@ -3,13 +3,6 @@
   "appName": "PDF Reader",
   "webDir": "www",
   "bundledWebRuntime": false,
-  "plugins": {
-    "StatusBar": {
-      "style": "DARK",
-      "backgroundColor": "#000000",
-      "overlaysWebView": false
-    }
-  },
   "android": {
     "statusBar": {
       "visible": true
