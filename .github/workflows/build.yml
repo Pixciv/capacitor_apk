@@ -1,48 +1,30 @@
-name: Capacitor Android Full Project & Artifact v4
+package com.arvinapp.pdfreader;
 
-on:
-  push:
-    branches:
-      - main
+import android.os.Bundle;
+import android.view.View;
+import android.view.WindowInsets;
+import androidx.annotation.Nullable;
+import com.getcapacitor.BridgeActivity;
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+public class MainActivity extends BridgeActivity {
 
-    steps:
-      # 📥 Repo çek
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-      # 🟢 Node.js kurulumu
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
+        // Bu satır Capacitor WebView için tam ekran
+        getWindow().setDecorFitsSystemWindows(false);
 
-      # 📦 Bağımlılıkları yükle
-      - name: Install dependencies
-        run: npm install --force
+        // Root view bul
+        View rootView = findViewById(android.R.id.content);
 
-      # ⚡ Capacitor CLI güncel
-      - name: Install Capacitor CLI globally
-        run: npm install -g @capacitor/cli@latest
+        // Status bar + navigation bar yüksekliği kadar padding ekle
+        rootView.setOnApplyWindowInsetsListener((v, insets) -> {
+            int top = insets.getInsets(WindowInsets.Type.statusBars()).top;
+            int bottom = insets.getInsets(WindowInsets.Type.navigationBars()).bottom;
 
-      # 📁 Web içeriğini Android’e kopyala
-      - name: Copy web to Android
-        run: npx cap copy android
-
-      # 🔧 gradlew executable yap
-      - name: Make gradlew executable
-        run: chmod +x android/gradlew
-
-      # 🤖 Android Debug APK üret
-      - name: Build Android Debug APK
-        run: cd android && ./gradlew assembleDebug --no-daemon
-
-      # 📤 Debug APK’yı Artifact olarak yükle
-      - name: Upload Android Debug APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+            v.setPadding(0, top, 0, bottom);
+            return insets;
+        });
+    }
+}
