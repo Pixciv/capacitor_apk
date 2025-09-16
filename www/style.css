@@ -220,6 +220,7 @@ input:checked + .slider:before {
 /* Üst Çubuk */
 .header {
     display: flex;
+    margin-top: 20px;
     justify-content: flex-start;
     align-items: center;
     background-color: #f44336;
