@@ -3,7 +3,7 @@ package com.arvinapp.pdfreader;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
-import android.view.WindowInsets;
+import android.graphics.Color;
 import androidx.annotation.Nullable;
 import com.getcapacitor.BridgeActivity;
 
@@ -17,10 +17,10 @@ public class MainActivity extends BridgeActivity {
         getWindow().setDecorFitsSystemWindows(false);
 
         // Status bar ve navigation bar siyah yap
-        getWindow().setStatusBarColor(0xFF000000);      // siyah
-        getWindow().setNavigationBarColor(0xFF000000);  // siyah
+        getWindow().setStatusBarColor(Color.BLACK);
+        getWindow().setNavigationBarColor(Color.BLACK);
 
-        // Status bar ve nav bar ikonlarını beyaz yap
+        // Status bar ve nav bar ikonlarını beyaz yap (tek seferde flag)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             int flags = getWindow().getDecorView().getSystemUiVisibility();
 
@@ -32,17 +32,5 @@ public class MainActivity extends BridgeActivity {
 
             getWindow().getDecorView().setSystemUiVisibility(flags);
         }
-
-        // Root view bul
-        View rootView = findViewById(android.R.id.content);
-
-        // Status bar + navigation bar yüksekliği kadar padding ekle
-        rootView.setOnApplyWindowInsetsListener((v, insets) -> {
-            int top = insets.getInsets(WindowInsets.Type.statusBars()).top;
-            int bottom = insets.getInsets(WindowInsets.Type.navigationBars()).bottom;
-
-            v.setPadding(0, top, 0, bottom);
-            return insets;
-        });
     }
 }
