@@ -23,13 +23,14 @@ public class MainActivity extends BridgeActivity {
         // Status bar ve nav bar ikonlarını beyaz yap
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             int flags = getWindow().getDecorView().getSystemUiVisibility();
-            // LIGHT_STATUS_BAR flag'ini kaldır → ikonlar beyaz
-            getWindow().getDecorView().setSystemUiVisibility(flags & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            int flags = getWindow().getDecorView().getSystemUiVisibility();
-            // LIGHT_NAVIGATION_BAR flag'ini kaldır → ikonlar beyaz
-            getWindow().getDecorView().setSystemUiVisibility(flags & ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+
+            // LIGHT_STATUS_BAR ve LIGHT_NAVIGATION_BAR flag'lerini kaldır → ikonlar beyaz
+            flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                flags &= ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+            }
+
+            getWindow().getDecorView().setSystemUiVisibility(flags);
         }
 
         // Root view bul
