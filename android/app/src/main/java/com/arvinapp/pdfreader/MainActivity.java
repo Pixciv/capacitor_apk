@@ -16,7 +16,7 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        // STATÜS BAR SİYAH - BEYAZ İKONLAR İÇİN KESİN ÇÖZÜM
+        // STATÜS BAR SİYAH - BEYAZ İKONLAR İÇİN MUTLAK ÇÖZÜM
         setStatusBarBlackWithWhiteIcons();
         
         // Diğer kodlarınız aynen kalıyor...
@@ -44,20 +44,47 @@ public class MainActivity extends BridgeActivity {
     }
     
     private void setStatusBarBlackWithWhiteIcons() {
-        // Status bar arkaplanını SİYAH yap
+        Window window = getWindow();
+        
+        // 1. ÖNCE TÜM BAYRAKLARI TEMİZLE
+        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        
+        // 2. STATUS BAR RENGİNİ SİYAH YAP (Tüm Android versiyonları için)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            Window window = getWindow();
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
             window.setStatusBarColor(Color.BLACK); // SİYAH arkaplan
+        } else {
+            // Eski Android için
+            window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         }
         
-        // İkonları BEYAZ yap (Light status bar modunu KAPAT)
+        // 3. İKONLARI BEYAZ YAP - EN KRİTİK KISIM!
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            View decorView = getWindow().getDecorView();
-            int flags = decorView.getSystemUiVisibility();
-            flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR; // Bu satır ÇOK ÖNEMLİ!
-            decorView.setSystemUiVisibility(flags);
+            View decorView = window.getDecorView();
+            int systemUiVisibility = decorView.getSystemUiVisibility();
+            
+            // Işık status bar modunu KESİNLİKLE KAPAT
+            systemUiVisibility &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+            
+            // Fullscreen modundan çıkar
+            systemUiVisibility &= ~View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
+            systemUiVisibility &= ~View.SYSTEM_UI_FLAG_FULLSCREEN;
+            
+            decorView.setSystemUiVisibility(systemUiVisibility);
         }
+        
+        // 4. LIGHT STATUS BAR ÖZELLİĞİNİ ZORLA KAPAT
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            WindowManager.LayoutParams params = window.getAttributes();
+            params.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT;
+            window.setAttributes(params);
+        }
+    }
+    
+    // Aktivite yeniden başladığında da ayarları uygula
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setStatusBarBlackWithWhiteIcons();
     }
 }
