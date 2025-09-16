@@ -1,4 +1,28 @@
 /* Genel Stil ve Reset */
+
+
+:root {
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.header {
+    padding-top: var(--safe-area-top);
+    background-color: #f44336;
+}
+
+.bottom-nav {
+    padding-bottom: var(--safe-area-bottom);
+    background-color: #fff;
+}
+
+body.dark-mode .bottom-nav {
+    background-color: #1e1e1e;
+}
+
+
+
+
 html, body {
     height: 100%;
     margin: 0;
