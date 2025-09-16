@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- Ana tema -->
+    <!-- Ana uygulama teması -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Status & navigation bar siyah -->
         <item name="android:statusBarColor">@android:color/black</item>
         <item name="android:navigationBarColor">@android:color/black</item>
 
-        <!-- İkonların beyaz olması için -->
+        <!-- İkonlar beyaz olacak -->
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">false</item>
 
@@ -17,7 +17,7 @@
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
     </style>
 
-    <!-- Capacitor’un manifestte aradığı tema -->
+    <!-- Capacitor için özel tema -->
     <style name="AppTheme.NoActionBarLaunch.Capacitor" parent="AppTheme">
         <item name="android:windowBackground">@android:color/black</item>
     </style>
