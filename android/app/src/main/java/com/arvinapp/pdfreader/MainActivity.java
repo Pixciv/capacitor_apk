@@ -1,10 +1,12 @@
 package com.arvinapp.pdfreader;
 
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowInsets;
+import android.view.WindowManager;
 import androidx.core.view.WindowCompat;
 import com.getcapacitor.BridgeActivity;
 
@@ -21,11 +23,11 @@ public class MainActivity extends BridgeActivity {
         getWindow().setStatusBarColor(Color.BLACK);
         getWindow().setNavigationBarColor(Color.BLACK);
 
-        // Status bar ve navigation bar ikonlarını beyaz yap
-        WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView())
-            .setAppearanceLightStatusBars(false);
-        WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView())
-            .setAppearanceLightNavigationBars(false);
+        // Status bar ikonlarını beyaz yap
+        // Bu, farklı API seviyelerinde çalışacak en güvenilir yollardan biridir.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            getWindow().getDecorView().setSystemUiVisibility(getWindow().getDecorView().getSystemUiVisibility() & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        }
 
         final View rootView = findViewById(android.R.id.content);
 
