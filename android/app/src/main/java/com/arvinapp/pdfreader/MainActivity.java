@@ -9,46 +9,31 @@ import android.graphics.Color;
 import androidx.annotation.Nullable;
 import com.getcapacitor.BridgeActivity;
 
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
+
 public class MainActivity extends BridgeActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Window window = getWindow();
+        // İçeriğin ekranın kenarlarına kadar uzamasını sağlar
+        // Bu, status bar altındaki beyaz boşluğu kaldırır
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
 
-        // Status bar ve navigation bar siyah, ikonlar beyaz
-        applyEdgeToEdgeBlackBars(window);
-    }
+        // Status bar ve navigasyon barı renklerini ayarla
+        WindowInsetsControllerCompat windowInsetsController =
+                WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
 
-    private void applyEdgeToEdgeBlackBars(Window window) {
-        final int blackColor = Color.BLACK;
+        // Status bar'ı siyah yapar
+        getWindow().setStatusBarColor(getResources().getColor(android.R.color.black));
+        // Status bar ikonlarını beyaz yapar (açık stil kapalı)
+        windowInsetsController.setAppearanceLightStatusBars(false);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) { // Android 15+
-            window.getDecorView().setOnApplyWindowInsetsListener((view, insets) -> {
-                int statusBarHeight = insets.getInsets(WindowInsets.Type.statusBars()).top;
-                int navBarHeight = insets.getInsets(WindowInsets.Type.navigationBars()).bottom;
-
-                // Arka planı siyah ve padding ayarla
-                view.setBackgroundColor(blackColor);
-                view.setPadding(0, statusBarHeight, 0, navBarHeight);
-
-                return insets;
-            });
-
-            // Status bar ve navigation bar ikonları beyaz
-            int flags = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                      | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                      | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
-            window.getDecorView().setSystemUiVisibility(flags);
-
-            window.setStatusBarColor(blackColor);
-            window.setNavigationBarColor(blackColor);
-        } else {
-            // Android 15 ve altı
-            window.setStatusBarColor(blackColor);
-            window.setNavigationBarColor(blackColor);
-            window.getDecorView().setSystemUiVisibility(0); // ikonlar beyaz
-        }
+        // Navigasyon barı siyah yapar
+        getWindow().setNavigationBarColor(getResources().getColor(android.R.color.black));
+        // Navigasyon barı ikonlarını beyaz yapar (açık stil kapalı)
+        windowInsetsController.setAppearanceLightNavigationBars(false);
     }
 }
