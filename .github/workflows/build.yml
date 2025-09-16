@@ -23,10 +23,18 @@ jobs:
       # 📦 Bağımlılıkları yükle
       - name: Install dependencies
         run: npm install --force
+        
+      # 📱 Capacitor Status Bar Plugin'i yükle
+      - name: Install Capacitor Status Bar Plugin
+        run: npm install @capacitor/status-bar
 
       # ⚡ Capacitor CLI güncel
       - name: Install Capacitor CLI globally
         run: npm install -g @capacitor/cli@latest
+
+      # 🔄 Capacitor sync yap (plugin'lerin native kodlara eklenmesi için)
+      - name: Sync Capacitor
+        run: npx cap sync
 
       # 📁 Web içeriğini Android’e kopyala
       - name: Copy web to Android
