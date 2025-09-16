@@ -16,15 +16,19 @@ public class MainActivity extends BridgeActivity {
         // Capacitor WebView için tam ekran
         getWindow().setDecorFitsSystemWindows(false);
 
-        // Status bar ve navigation bar ikon renkleri
+        // Status bar ve navigation bar siyah yap
+        getWindow().setStatusBarColor(0xFF000000);      // siyah
+        getWindow().setNavigationBarColor(0xFF000000);  // siyah
+
+        // Status bar ve nav bar ikonlarını beyaz yap
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // Status bar ikonları koyu (light content: false → beyaz ikon)
             int flags = getWindow().getDecorView().getSystemUiVisibility();
+            // LIGHT_STATUS_BAR flag'ini kaldır → ikonlar beyaz
             getWindow().getDecorView().setSystemUiVisibility(flags & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // Navigation bar ikonları beyaz
             int flags = getWindow().getDecorView().getSystemUiVisibility();
+            // LIGHT_NAVIGATION_BAR flag'ini kaldır → ikonlar beyaz
             getWindow().getDecorView().setSystemUiVisibility(flags & ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
         }
 
