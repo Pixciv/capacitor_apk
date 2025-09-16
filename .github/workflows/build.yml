@@ -70,11 +70,4 @@ jobs:
           name: android-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
 
-      # 1️⃣2️⃣ Tüm proje klasörünü zipleyip artifact olarak yükle
-      - name: Zip entire project
-        run: zip -r capacitor_full_project.zip . -x "**/node_modules/*" "**/android/build/*" "**/android/.gradle/*"
-      - name: Upload full project artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: capacitor-full-project
-          path: capacitor_full_project.zip
+      
