@@ -1,4 +1,4 @@
-name: Capacitor Full Build & Artifact v4
+name: Capacitor Android Build & Artifact v4
 
 on:
   push:
@@ -10,50 +10,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Repo çek
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      # 2️⃣ Node.js kurulumu (en son LTS sürümü)
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'  # Güncel LTS
+          node-version: '20'
 
-      # 3️⃣ Npm ve lock dosyalarını hazırla
-      - name: Ensure package-lock.json exists
-        run: |
-          if [ ! -f package-lock.json ]; then
-            echo "package-lock.json yok, oluşturuluyor..."
-            npm install --package-lock-only
-          fi
-
-      # 4️⃣ Bağımlılıkları yükle (her zaman son sürüm)
       - name: Install dependencies
         run: npm install --force
 
-      # 5️⃣ Web build (en son sürüm)
-      - name: Build web
-        run: npm run build
-
-      # 6️⃣ Capacitor copy
       - name: Copy web to Android
         run: npx cap copy android
 
-      # 7️⃣ Android Debug APK üret
       - name: Build Android Debug APK
         run: cd android && ./gradlew assembleDebug --no-daemon
 
-      # 8️⃣ Artifact olarak debug APK yükle
       - name: Upload Android Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: android-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
-
-      # 9️⃣ Artifact olarak web build yükle
-      - name: Upload web build
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-build
-          path: build/
