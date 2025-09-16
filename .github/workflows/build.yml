@@ -30,10 +30,7 @@ jobs:
       # 📦 Bağımlılıkları yükle
       - name: Install dependencies
         run: npm install --force
-        
-      # 📱 Capacitor Status Bar Plugin'i uyumlu sürümle yükle (6.0.0)
-      - name: Install Compatible Capacitor Status Bar Plugin
-        run: npm install @capacitor/status-bar@6.0.0
+
 
       # ⚡ Capacitor CLI güncel
       - name: Install Capacitor CLI globally
