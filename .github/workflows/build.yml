@@ -10,27 +10,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      # 1️⃣ Repo çek
+      - name: Checkout repository
         uses: actions/checkout@v3
 
+      # 2️⃣ Node.js kurulumu
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
 
+      # 3️⃣ Bağımlılıkları yükle
       - name: Install dependencies
         run: npm install --force
 
+      # 4️⃣ Capacitor CLI güncel
       - name: Install Capacitor CLI globally
         run: npm install -g @capacitor/cli@latest
 
-      - name: Initialize Capacitor (if needed)
-        run: |
-          if [ ! -f "capacitor.config.json" ]; then
-            npx cap init "PDF Reader" "com.arvinapp.pdfreader"
-          fi
-
-      - name: Add Android platform
+      # 5️⃣ Android platformunu ekle (sadece ekli değilse)
+      - name: Add Android Platform
         run: |
           if [ ! -d "android" ]; then
             npx cap add android
@@ -38,12 +37,15 @@ jobs:
             echo "Android platformu zaten mevcut."
           fi
 
-      - name: Copy www to Android
+      # 6️⃣ Web içeriğini Android’e kopyala
+      - name: Copy web to Android
         run: npx cap copy android
 
+      # 7️⃣ Android Debug APK üret
       - name: Build Android Debug APK
         run: cd android && ./gradlew assembleDebug --no-daemon
 
+      # 8️⃣ Debug APK’yı Artifact olarak yükle
       - name: Upload Android Debug APK
         uses: actions/upload-artifact@v4
         with:
