@@ -1,5 +1,6 @@
 package com.arvinapp.pdfreader;
 
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
@@ -17,9 +18,20 @@ public class MainActivity extends BridgeActivity {
         // Sistemin pencereyi tam ekran yapmasını engelle.
         WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
 
+        // Status bar rengini siyah yap
+        getWindow().setStatusBarColor(Color.BLACK);
+
+        // Status bar ikonlarını (zaman, pil simgesi vs.) beyaz yap
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            View decorView = getWindow().getDecorView();
+            decorView.setSystemUiVisibility(decorView.getSystemUiVisibility() & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        }
+
+        // Web içeriğini barındıran view'ı bul.
         final View rootView = findViewById(android.R.id.content);
 
-        // API 29 ve üzeri için daha modern ve doğru insets API'sini kullan
+        // Bu listener, sistem barlarının boyutları değiştiğinde tetiklenir
+        // ve içeriğe uygun boşluk (padding) ekler.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             rootView.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
                 @Override
@@ -40,4 +52,3 @@ public class MainActivity extends BridgeActivity {
         }
     }
 }
-
