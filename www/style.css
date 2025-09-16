@@ -1,13 +1,22 @@
 /* Genel Stil ve Reset */
 
+
+body.dark-mode #one-top{
+    
+    background-color: #333;  
+    
+}
+
 #statusbar {
   height: 6%;
-  background-color: #f44336; /* normal mod kırmızı */
+  background-color: #f44336; 
+  
+    /* normal mod kırmızı */
 }
 
 /* Dark mode için statusbar */
 body.dark-mode #statusbar {
-   background-color: #121212; /* koyu kırmızı ton */
+   background-color: #333;  
 }
 
 /* öze stylim yukardaki */
@@ -38,7 +47,7 @@ body.dark-mode {
 
 body.dark-mode .header {
     background-color: #333;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0px 0px rgba(0, 0, 0, 0.4);
 }
 
 body.dark-mode .top-tabs {
@@ -132,7 +141,7 @@ body.dark-mode .menu-item i {
 
 /* Dark mode */
 body.dark-mode .drawer-header {
-  background-color: #000000; /* siyah */
+  background-color: #333; /* siyah */
   color: #ffffff; /* yazılar beyaz */
 }
     
@@ -249,8 +258,10 @@ input:checked + .slider:before {
     background-color: #f44336;
     color: white;
     padding: 15px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    position: relative;
+    box-shadow: 0 0px 0px rgba(0, 0, 0, 0.1);
+    position: relativ;
+}
+
 }
 
 .drawer-toggle-icon, .header-back-icon {
@@ -261,6 +272,7 @@ input:checked + .slider:before {
 
 .header-title {
     margin: 0;
+    margin-left:8px;
     font-size: 18px;
     font-weight: bold;
     flex-grow: 1;
