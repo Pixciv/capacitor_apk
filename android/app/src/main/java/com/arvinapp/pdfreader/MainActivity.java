@@ -1,3 +1,6 @@
+package com.arvinapp.pdfreader;
+
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,28 +17,27 @@ public class MainActivity extends BridgeActivity {
         // Sistemin pencereyi tam ekran yapmasını engelle.
         WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
 
-        // Web içeriğini barındıran view'ı bul.
         final View rootView = findViewById(android.R.id.content);
 
-        // Bu listener, sistem barlarının boyutları değiştiğinde tetiklenir
-        // ve içeriğe uygun boşluk (padding) ekler.
-        rootView.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
-            @Override
-            public WindowInsets onApplyWindowInsets(View view, WindowInsets insets) {
-                // Güvenli alan (safe area) insets'lerini al
-                int statusBarHeight = insets.getSystemWindowInsetTop();
-                int navigationBarHeight = insets.getSystemWindowInsetBottom();
+        // API 29 ve üzeri için daha modern ve doğru insets API'sini kullan
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            rootView.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
+                @Override
+                public WindowInsets onApplyWindowInsets(View view, WindowInsets insets) {
+                    int statusBarHeight = insets.getSystemWindowInsets().top;
+                    int navigationBarHeight = insets.getSystemWindowInsets().bottom;
 
-                // Web içeriğinin olduğu view'a bu boşlukları uygula
-                view.setPadding(
-                    view.getPaddingLeft(),
-                    statusBarHeight,
-                    view.getPaddingRight(),
-                    navigationBarHeight
-                );
+                    view.setPadding(
+                        view.getPaddingLeft(),
+                        statusBarHeight,
+                        view.getPaddingRight(),
+                        navigationBarHeight
+                    );
 
-                return insets;
-            }
-        });
+                    return insets;
+                }
+            });
+        }
     }
 }
+
