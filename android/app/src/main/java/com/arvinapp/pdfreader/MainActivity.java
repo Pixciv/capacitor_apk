@@ -1,14 +1,8 @@
 package com.arvinapp.pdfreader;
 
-import android.os.Build;
 import android.os.Bundle;
-import android.view.View;
-import android.view.Window;
-import android.view.WindowInsets;
-import android.graphics.Color;
 import androidx.annotation.Nullable;
 import com.getcapacitor.BridgeActivity;
-
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
@@ -19,7 +13,6 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
 
         // İçeriğin ekranın kenarlarına kadar uzamasını sağlar
-        // Bu, status bar altındaki beyaz boşluğu kaldırır
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
 
         // Status bar ve navigasyon barı renklerini ayarla
