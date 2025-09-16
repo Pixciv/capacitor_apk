@@ -3,34 +3,45 @@ package com.arvinapp.pdfreader;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
-import android.view.WindowInsetsController;
-import androidx.core.splashscreen.SplashScreen;
+import android.view.Window;
+import android.view.WindowInsets;
+import android.graphics.Color;
+import androidx.annotation.Nullable;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        SplashScreen.installSplashScreen(this);
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Status bar ve navigation bar siyah
-        getWindow().setStatusBarColor(getResources().getColor(android.R.color.black));
-        getWindow().setNavigationBarColor(getResources().getColor(android.R.color.black));
+        Window window = getWindow();
 
-        // İkonları beyaz yapmak için modern API
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            final WindowInsetsController controller = getWindow().getInsetsController();
-            if (controller != null) {
-                controller.setSystemBarsAppearance(0, WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) { // Android 15+ için
+            window.getDecorView().setOnApplyWindowInsetsListener((view, insets) -> {
+                // Status bar yüksekliğini al
+                int statusBarHeight = insets.getInsets(WindowInsets.Type.statusBars()).top;
+                
+                // View arka planını siyah yap
+                view.setBackgroundColor(Color.BLACK);
+
+                // İçeriğin status bar ile çakışmaması için padding ekle
+                view.setPadding(0, statusBarHeight, 0, 0);
+
+                return insets;
+            });
+
+            // Status bar ikonlarını beyaz yap
+            window.getDecorView().setSystemUiVisibility(0);
         } else {
-            // Eski sürümlerde
-            getWindow().getDecorView().setSystemUiVisibility(
-                    getWindow().getDecorView().getSystemUiVisibility() &
-                    ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR &
-                    ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
-            );
+            // Android 15 altı cihazlar
+            window.setStatusBarColor(Color.BLACK);
+            // Beyaz ikonlar için legacy flag
+            window.getDecorView().setSystemUiVisibility(0);
         }
+
+        // Navigation bar siyah ve ikonlar beyaz
+        window.setNavigationBarColor(Color.BLACK);
+        window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
     }
 }
