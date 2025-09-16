@@ -1,20 +1,24 @@
-package com.arvinapp.pdfreader;
+import android.view.View;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
+import android.widget.FrameLayout;
 
-import android.os.Bundle;
-import com.getcapacitor.BridgeActivity;
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+  super.onCreate(savedInstanceState);
 
-public class MainActivity extends BridgeActivity {
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
+  getWindow().setDecorFitsSystemWindows(false);
 
-    // Status bar ve navigation bar alanlarını ayrı bırak, web içerik altından başlasın
-    getWindow().setDecorFitsSystemWindows(true);
+  // Root view bul
+  View rootView = findViewById(android.R.id.content);
 
-    // Status bar rengini ayarla (istediğin renge çevirebilirsin)
-    getWindow().setStatusBarColor(android.graphics.Color.BLACK);
+  // Insets (status bar + nav bar) dinle
+  rootView.setOnApplyWindowInsetsListener((v, insets) -> {
+      int top = insets.getInsets(WindowInsets.Type.statusBars()).top;
+      int bottom = insets.getInsets(WindowInsets.Type.navigationBars()).bottom;
 
-    // Navigation bar rengini ayarla (opsiyonel)
-    getWindow().setNavigationBarColor(android.graphics.Color.BLACK);
-  }
+      // WebView içine padding ver
+      v.setPadding(0, top, 0, bottom);
+      return insets;
+  });
 }
