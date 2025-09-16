@@ -1,5 +1,6 @@
 package com.arvinapp.pdfreader;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowInsets;
@@ -12,8 +13,20 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Bu satır Capacitor WebView için tam ekran
+        // Capacitor WebView için tam ekran
         getWindow().setDecorFitsSystemWindows(false);
+
+        // Status bar ve navigation bar ikon renkleri
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // Status bar ikonları koyu (light content: false → beyaz ikon)
+            int flags = getWindow().getDecorView().getSystemUiVisibility();
+            getWindow().getDecorView().setSystemUiVisibility(flags & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Navigation bar ikonları beyaz
+            int flags = getWindow().getDecorView().getSystemUiVisibility();
+            getWindow().getDecorView().setSystemUiVisibility(flags & ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+        }
 
         // Root view bul
         View rootView = findViewById(android.R.id.content);
