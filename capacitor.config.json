@@ -3,12 +3,7 @@
   "appName": "PDF Reader",
   "webDir": "www",
   "bundledWebRuntime": false,
-  "android": {
-    "statusBar": {
-      "visible": true
-    },
-    "navigationBar": {
-      "visible": true
-    }
+  "plugins": {
+    "CapacitorAndroidEdgeToEdgeSupport": {}
   }
 }
