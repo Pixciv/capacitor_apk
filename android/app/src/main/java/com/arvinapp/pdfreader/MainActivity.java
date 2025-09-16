@@ -4,7 +4,6 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowInsets;
 import androidx.core.view.WindowCompat;
 import com.getcapacitor.BridgeActivity;
@@ -36,8 +35,9 @@ public class MainActivity extends BridgeActivity {
             rootView.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
                 @Override
                 public WindowInsets onApplyWindowInsets(View view, WindowInsets insets) {
-                    int statusBarHeight = insets.getSystemWindowInsets().top;
-                    int navigationBarHeight = insets.getSystemWindowInsets().bottom;
+                    // Güncel API kullanımı
+                    int statusBarHeight = insets.getInsets(WindowInsets.Type.systemBars()).top;
+                    int navigationBarHeight = insets.getInsets(WindowInsets.Type.systemBars()).bottom;
 
                     view.setPadding(
                         view.getPaddingLeft(),
