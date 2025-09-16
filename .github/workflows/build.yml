@@ -42,16 +42,6 @@ jobs:
             echo "capacitor.config.json mevcut."
           fi
 
-      # 6️⃣ Minimal www oluştur (varsa atla)
-      - name: Create minimal www if missing
-        run: |
-          if [ ! -d "www" ]; then
-            mkdir www
-            echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>PDF Reader</title></head><body><h1>PDF Reader App</h1><p>Welcome to your Capacitor Android app!</p></body></html>' > www/index.html
-          else
-            echo "www dizini mevcut."
-          fi
-
       # 7️⃣ Android platformunu ekle (yoksa)
       - name: Add Android Platform
         run: |
@@ -65,18 +55,22 @@ jobs:
       - name: Copy web to Android
         run: npx cap copy android
 
-      # 9️⃣ Android Debug APK üret
+      # 9️⃣ gradlew executable yap
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      # 🔟 Android Debug APK üret
       - name: Build Android Debug APK
         run: cd android && ./gradlew assembleDebug --no-daemon
 
-      # 🔟 Debug APK’yı Artifact olarak yükle
+      # 1️⃣1️⃣ Debug APK’yı Artifact olarak yükle
       - name: Upload Android Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: android-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
 
-      # 1️⃣1️⃣ Tüm proje klasörünü zipleyip artifact olarak yükle
+      # 1️⃣2️⃣ Tüm proje klasörünü zipleyip artifact olarak yükle
       - name: Zip entire project
         run: zip -r capacitor_full_project.zip . -x "**/node_modules/*" "**/android/build/*" "**/android/.gradle/*"
       - name: Upload full project artifact
