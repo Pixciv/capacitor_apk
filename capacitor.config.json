@@ -2,12 +2,6 @@
   "appId": "com.arvinapp.pdfreader",
   "appName": "PDF Reader",
   "webDir": "www",
-  "bundledWebRuntime": false,
-  "plugins": {
-    "StatusBar": {
-      "style": "DARK",
-      "backgroundColor": "#000000",
-      "overlaysWebView": false
-    }
-  }
+  "bundledWebRuntime": false
 }
+
