@@ -8,10 +8,13 @@ public class MainActivity extends BridgeActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    // Status bar alanını ayrı bırak, web içerik altından başlasın
+    // Status bar ve navigation bar alanlarını ayrı bırak, web içerik altından başlasın
     getWindow().setDecorFitsSystemWindows(true);
 
-    // İsteğe bağlı: status bar rengini beyaz yap (değiştirebilirsin)
-    getWindow().setStatusBarColor(android.graphics.Color.WHITE);
+    // Status bar rengini ayarla (istediğin renge çevirebilirsin)
+    getWindow().setStatusBarColor(android.graphics.Color.BLACK);
+
+    // Navigation bar rengini ayarla (opsiyonel)
+    getWindow().setNavigationBarColor(android.graphics.Color.BLACK);
   }
 }
