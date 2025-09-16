@@ -8,8 +8,6 @@ import android.view.WindowInsets;
 import android.graphics.Color;
 import androidx.annotation.Nullable;
 import com.getcapacitor.BridgeActivity;
-import androidx.core.view.WindowCompat;
-import androidx.core.view.WindowInsetsControllerCompat;
 
 public class MainActivity extends BridgeActivity {
 
@@ -17,21 +15,34 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // İçeriğin ekranın kenarlarına kadar uzamasını sağlar
-        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        Window window = getWindow();
 
-        // Status bar ve navigasyon barı renklerini ayarla
-        WindowInsetsControllerCompat windowInsetsController =
-                WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        // --- STATUS BAR ---
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) { // Android 15+
+            window.getDecorView().setOnApplyWindowInsetsListener((view, insets) -> {
+                int statusBarHeight = insets.getInsets(WindowInsets.Type.statusBars()).top;
+                view.setBackgroundColor(Color.BLACK);
+                view.setPadding(0, statusBarHeight, 0, 0);
+                return insets;
+            });
+            window.getDecorView().setSystemUiVisibility(0); // beyaz ikonlar
+        } else {
+            window.setStatusBarColor(Color.BLACK);
+            window.getDecorView().setSystemUiVisibility(0); // beyaz ikonlar
+        }
 
-        // Status bar'ı siyah yapar
-        getWindow().setStatusBarColor(getResources().getColor(android.R.color.black));
-        // Status bar ikonlarını beyaz yapar (açık stil kapalı)
-        windowInsetsController.setAppearanceLightStatusBars(false);
-
-        // Navigasyon barı siyah yapar
-        getWindow().setNavigationBarColor(getResources().getColor(android.R.color.black));
-        // Navigasyon barı ikonlarını beyaz yapar (açık stil kapalı)
-        windowInsetsController.setAppearanceLightNavigationBars(false);
+        // --- NAVIGATION BAR ---
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) { // Android 15+
+            window.getDecorView().setOnApplyWindowInsetsListener((view, insets) -> {
+                int navBarHeight = insets.getInsets(WindowInsets.Type.navigationBars()).bottom;
+                view.setPadding(0, view.getPaddingTop(), 0, navBarHeight);
+                view.setBackgroundColor(Color.BLACK); // arka plan siyah
+                return insets;
+            });
+            window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR); // ikon beyaz
+        } else {
+            window.setNavigationBarColor(Color.BLACK);
+            window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR); // ikon beyaz
+        }
     }
 }
