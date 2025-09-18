@@ -27,20 +27,19 @@ jobs:
         with:
           node-version: '20'
 
-      # 📦 Bağımlılıkları yükle
+      # 📦 Bağımlılıkları yükle (peer dependency hatalarını görmezden gel)
       - name: Install dependencies
-        run: npm install --force
+        run: npm install --legacy-peer-deps
 
-      # ✨ Node.js Mobile entegrasyonu için gerekli eklentiyi yükle
+      # ✨ Node.js Mobile entegrasyonu için gerekli eklentiyi yükle (peer dependency uyumsuzluğunu görmezden gel)
       - name: Install Node.js Mobile plugin
-        run: npm install capacitor-nodejs
+        run: npm install capacitor-nodejs --legacy-peer-deps
 
       # 📁 Node.js projesi için dizin oluştur ve içeriği kopyala
       - name: Prepare Node.js project for embedding
         run: |
           mkdir -p www/nodejs
           # Bu komut, uygulamanızda çalışacak Node.js backend kodunuzu kopyalar.
-          # Lütfen bu satırı kendi projenize göre düzenleyin.
           # Örneğin: cp -R backend_src/* www/nodejs/
           touch www/nodejs/index.js # placeholder, replace with your actual code copy command
 
@@ -77,4 +76,3 @@ jobs:
         with:
           name: android-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
-
