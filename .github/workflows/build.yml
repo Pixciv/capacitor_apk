@@ -31,6 +31,10 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
+      # 📦 office-to-pdf paketini yükle
+      - name: Install office-to-pdf
+        run: npm install office-to-pdf --save
+
       # ✨ Node.js Mobile plugin yükle (Capacitor 7 uyumlu beta)
       - name: Install Node.js Mobile plugin (Capacitor 7 compatible)
         run: |
@@ -41,9 +45,11 @@ jobs:
       - name: Prepare Node.js project for embedding
         run: |
           mkdir -p www/nodejs
-          # Bu komut, uygulamanızda çalışacak Node.js backend kodunuzu kopyalar.
-          # Örneğin: cp -R backend_src/* www/nodejs/
-          touch www/nodejs/index.js # placeholder, replace with your actual code copy command
+          # Node.js modüllerini www/nodejs dizinine kopyala
+          cp -R node_modules www/nodejs/
+          # Node.js backend kodunu kopyala
+          # Bu komutu kendi Node.js dosyalarınızı kopyalayacak şekilde değiştirin
+          echo "const fs = require('fs'); const path = require('path'); const officeToPdf = require('office-to-pdf'); async function convertFileToPDF(inputPath) { const ext = path.extname(inputPath).toLowerCase(); const outputPath = inputPath.replace(ext, '.pdf'); if(ext === '.pdf') { return inputPath; } try { const fileData = fs.readFileSync(inputPath); const pdfBuffer = await officeToPdf(fileData); fs.writeFileSync(outputPath, pdfBuffer); return outputPath; } catch (err) { console.error('Conversion error:', err); throw err; } } global.convertFileToPDF = convertFileToPDF;" > www/nodejs/convert.js
 
       # ⚡ Capacitor CLI güncel
       - name: Install Capacitor CLI globally
@@ -53,7 +59,7 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync
 
-      # 📁 Web içeriğini Android’e kopyala
+      # 📁 Web içeriğini Android'e kopyala
       - name: Copy web to Android
         run: npx cap copy android
 
@@ -72,7 +78,7 @@ jobs:
       - name: Build Android Debug APK
         run: cd android && ./gradlew assembleDebug --no-daemon --warning-mode all
 
-      # 📤 Debug APK’yı Artifact olarak yükle
+      # 📤 Debug APK'yı Artifact olarak yükle
       - name: Upload Android Debug APK
         uses: actions/upload-artifact@v4
         with:
