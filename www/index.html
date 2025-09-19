@@ -56,7 +56,6 @@ convertBtn.addEventListener("click", async () => {
 
     const filePath = selectedFile.path || selectedFile.name;
 
-    // Basit ilerleme simülasyonu
     for (let i = 1; i <= 100; i++) {
         await new Promise(res => setTimeout(res, 10));
         progressBar.style.width = i + "%";
