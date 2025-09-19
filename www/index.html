@@ -1,145 +1,15 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>All Reader Offline Test</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
-            min-height: 100vh;
-        }
-        .container {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-        }
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .status {
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 8px;
-            text-align: center;
-        }
-        .success {
-            background-color: rgba(76, 175, 80, 0.2);
-            border: 1px solid #4CAF50;
-        }
-        .error {
-            background-color: rgba(244, 67, 54, 0.2);
-            border: 1px solid #F44336;
-        }
-        .btn {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            margin: 10px 0;
-            background: #2196F3;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        .btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        .test-result {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            min-height: 100px;
-            font-family: monospace;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Office → HTML Viewer</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>All Reader Offline Test</h1>
-        
-        <div id="nodejsStatus" class="status error">
-            Node.js Mobile kontrol ediliyor...
-        </div>
-        
-        <button class="btn" onclick="testNodejs()">Node.js Mobile Test Et</button>
-        <button class="btn" onclick="testConversion()" id="convertBtn" disabled>Dönüştürme Testi</button>
-        
-        <div class="test-result" id="testResult">
-            Test sonuçları burada görünecek...
-        </div>
-    </div>
-
-    <script>
-        // Sayfa yüklendiğinde Node.js Mobile kontrolü
-        document.addEventListener('DOMContentLoaded', function() {
-            checkNodeJsMobile();
-        });
-        
-        // Node.js Mobile kontrolü
-        function checkNodeJsMobile() {
-            const statusElement = document.getElementById('nodejsStatus');
-            const convertBtn = document.getElementById('convertBtn');
-            
-            if (typeof window.NodeJsMobile !== 'undefined') {
-                statusElement.innerHTML = '✓ Node.js Mobile yüklü!';
-                statusElement.className = 'status success';
-                convertBtn.disabled = false;
-                addTestResult('Node.js Mobile başarıyla yüklendi.');
-            } else {
-                statusElement.innerHTML = '✗ Node.js Mobile yüklenmemiş. Lütfen uygulamayı Capacitor ile derleyin.';
-                statusElement.className = 'status error';
-                convertBtn.disabled = true;
-                addTestResult('Node.js Mobile yüklenmemiş. Bu özellik sadece Capacitor uygulamasında çalışır.');
-            }
-        }
-        
-        // Node.js testi
-        function testNodejs() {
-            addTestResult('Node.js Mobile test ediliyor...');
-            
-            if (typeof window.NodeJsMobile !== 'undefined') {
-                try {
-                    addTestResult('✓ NodeJsMobile objesi mevcut');
-                    
-                    if (typeof window.NodeJsMobile.convertFileToPDF === 'function') {
-                        addTestResult('✓ convertFileToPDF fonksiyonu mevcut');
-                        addTestResult('Node.js Mobile başarıyla çalışıyor!');
-                    } else {
-                        addTestResult('✗ convertFileToPDF fonksiyonu mevcut değil');
-                    }
-                } catch (error) {
-                    addTestResult('Hata: ' + error.message);
-                }
-            } else {
-                addTestResult('Node.js Mobile yüklenmemiş. Lütfen uygulamayı Capacitor ile derleyin.');
-            }
-        }
-        
-        // Dönüştürme testi
-        function testConversion() {
-            addTestResult('Dönüştürme testi başlatılıyor...');
-            
-            // Bu kısımda gerçek dönüştürme işlemi yapılacak
-            addTestResult('Bu özellik sadece derlenmiş uygulamada çalışır.');
-        }
-        
-        // Test sonucu ekleme
-        function addTestResult(message) {
-            const resultElement = document.getElementById('testResult');
-            resultElement.innerHTML += '<div>' + message + '</div>';
-            resultElement.scrollTop = resultElement.scrollHeight;
-        }
-    </script>
+  <h1>Office → HTML Viewer</h1>
+  <input type="file" id="fileInput" accept=".docx,.xlsx,.pptx"/>
+  <div id="htmlContainer" style="border:1px solid #ccc; padding:10px; margin-top:10px;"></div>
+  <script src="main.js"></script>
 </body>
 </html>
