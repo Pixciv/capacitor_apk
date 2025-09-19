@@ -4,9 +4,6 @@ const mammoth = require("mammoth");
 const ExcelJS = require("exceljs");
 const PPTXParser = require("pptx-parser");
 
-/**
- * Word (.docx) → HTML
- */
 async function convertDocxToHtml(filePath) {
     try {
         const result = await mammoth.convertToHtml({ path: filePath });
@@ -17,9 +14,6 @@ async function convertDocxToHtml(filePath) {
     }
 }
 
-/**
- * Excel (.xlsx) → HTML
- */
 async function convertXlsxToHtml(filePath) {
     try {
         const workbook = new ExcelJS.Workbook();
@@ -42,9 +36,6 @@ async function convertXlsxToHtml(filePath) {
     }
 }
 
-/**
- * PowerPoint (.pptx) → HTML
- */
 async function convertPptxToHtml(filePath) {
     try {
         const presentation = await PPTXParser.parse(filePath);
@@ -64,18 +55,13 @@ async function convertPptxToHtml(filePath) {
     }
 }
 
-/**
- * Genel convert fonksiyonu
- */
 async function convertOfficeToHtml(filePath) {
     const ext = path.extname(filePath).toLowerCase();
-
     if (ext === ".docx") return await convertDocxToHtml(filePath);
     if (ext === ".xlsx") return await convertXlsxToHtml(filePath);
     if (ext === ".pptx") return await convertPptxToHtml(filePath);
-
     return "<p>Unsupported file type</p>";
 }
 
-// Node.js Mobile plugin için module.exports kullan
+// Node.js Mobile plugin ile kullanılacak
 module.exports = { convertOfficeToHtml };
