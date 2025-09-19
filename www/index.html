@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Treb Edit PDF Okuyucu</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
@@ -24,6 +24,8 @@
       flex-direction: column;
       height: 100vh;
       overflow: hidden;
+      /* Status bar'ın altına itmek için */
+      padding-top: env(safe-area-inset-top);
     }
 
     .overlay {
@@ -68,6 +70,8 @@
       box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
       transition: left 0.3s ease;
       z-index: 1000;
+      /* Status bar altına doğru itmek için */
+      padding-top: env(safe-area-inset-top);
     }
 
     .drawer-menu.open {
@@ -102,7 +106,6 @@
       color: var(--secondary-text-color);
     }
     
-    /* Yeni CSS: Drawer Header */
     .drawer-header {
       background-color: var(--primary-color);
       color: #fff;
@@ -197,7 +200,7 @@
       cursor: pointer;
       padding: 0.5rem;
       flex-grow: 1;
-      background-color: #fff; /* Sekmeler için beyaz arka plan */
+      background-color: #fff;
     }
 
     .bottom-bar .tab.active {
@@ -211,6 +214,32 @@
     .bottom-bar .tab span {
       font-size: 0.75rem;
       margin-top: 0.25rem;
+    }
+
+    .tools-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 1rem;
+        text-align: center;
+        margin-top: 1rem;
+    }
+
+    .tool-item {
+        background-color: var(--card-background);
+        padding: 1.5rem 1rem;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .tool-icon {
+        font-size: 2rem;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
     }
   </style>
 </head>
@@ -270,7 +299,11 @@
     </div>
   </div>
 
-  <script>
+  <script type="module">
+    import { Filesystem, Directory } from '@capacitor/filesystem';
+    import { WebView } from '@capacitor/core';
+    
+    // Uygulamada kullanılacak sabitleri ve DOM öğelerini tanımlama
     const menuIcon = document.getElementById('menuIcon');
     const drawerMenu = document.getElementById('drawerMenu');
     const overlay = document.getElementById('overlay');
@@ -307,6 +340,27 @@
             filesToRender = files.filter(f => f.isFavorite);
             title = 'Favoriler';
         } else if (listType === 'tools') {
+            pdfList.innerHTML = `
+                <div class="tools-grid">
+                    <div class="tool-item">
+                        <i class="fas fa-compress-arrows-alt tool-icon"></i>
+                        <span>PDF Sıkıştır</span>
+                    </div>
+                    <div class="tool-item">
+                        <i class="fas fa-file-signature tool-icon"></i>
+                        <span>İmza Ekle</span>
+                    </div>
+                    <div class="tool-item">
+                        <i class="fas fa-highlighter tool-icon"></i>
+                        <span>Vurgula</span>
+                    </div>
+                    <div class="tool-item">
+                        <i class="fas fa-edit tool-icon"></i>
+                        <span>Metin Düzenle</span>
+                    </div>
+                </div>
+            `;
+            pageTitle.textContent = 'Araçlar';
             return;
         }
 
@@ -332,7 +386,8 @@
                 `;
                 li.querySelector('.file-details').addEventListener('click', () => {
                     updateRecent(file.url);
-                    window.open(`web/viewer.html?file=${encodeURIComponent(file.url)}`, '_blank');
+                    // PDF.js viewer'ı açmak için Capacitor'ın WebView API'sini kullanıyoruz
+                    window.open(`web/viewer.html?file=${encodeURIComponent(file.url)}`, '_self');
                 });
                 li.querySelector('.favorite-icon').addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -427,29 +482,64 @@
     importFile.addEventListener('change', () => {
         Array.from(importFile.files).forEach(file => {
             const reader = new FileReader();
-            reader.onload = () => {
-                const blob = new Blob([reader.result], { type: 'application/pdf' });
-                const url = URL.createObjectURL(blob);
-                
-                let fileName = file.name;
-                const fileNameWithoutExt = fileName.split('.').slice(0, -1).join('.');
-                const fileExt = fileName.split('.').pop();
-                let counter = 1;
-                
-                while (files.some(f => f.name === fileName)) {
-                    fileName = `${fileNameWithoutExt}(${counter}).${fileExt}`;
-                    counter++;
+            reader.onload = async () => {
+                const fileName = file.name;
+                const fileData = reader.result; // ArrayBuffer olarak dosya verisi
+
+                try {
+                    // Dosya adını çakışma durumunda yeniden adlandır
+                    let finalFileName = fileName;
+                    let counter = 1;
+                    while (await fileExistsInAppFolder('pdfdoc', finalFileName)) {
+                        const fileNameWithoutExt = finalFileName.split('.').slice(0, -1).join('.');
+                        const fileExt = finalFileName.split('.').pop();
+                        finalFileName = `${fileNameWithoutExt}(${counter}).${fileExt}`;
+                        counter++;
+                    }
+
+                    // Dosyayı Capacitor Filesystem'e kaydet
+                    await Filesystem.writeFile({
+                        path: `pdfdoc/${finalFileName}`,
+                        data: fileData,
+                        directory: Directory.Data,
+                        recursive: true
+                    });
+
+                    // Dosya listesine ekle
+                    const fileEntry = {
+                        name: finalFileName,
+                        size: file.size,
+                        url: WebView.convertFileSrc(`file:///data/data/com.example.app/files/pdfdoc/${finalFileName}`),
+                        isRecent: false,
+                        isFavorite: false,
+                        lastOpened: null
+                    };
+                    files.push(fileEntry);
+                    saveFiles();
+                    renderFiles('all-files');
+                } catch (error) {
+                    console.error('Dosya kaydetme hatası:', error);
+                    alert('Dosya kaydedilirken bir hata oluştu.');
                 }
-                
-                files.push({ name: fileName, size: file.size, url: url, isRecent: false, isFavorite: false, lastOpened: null });
-                saveFiles();
-                renderFiles('all-files');
             };
             reader.readAsArrayBuffer(file);
         });
         toggleDrawer(false);
     });
     
+    // Yardımcı fonksiyon: Dosyanın varlığını kontrol et
+    async function fileExistsInAppFolder(directory, fileName) {
+        try {
+            await Filesystem.stat({
+                path: `${directory}/${fileName}`,
+                directory: Directory.Data
+            });
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
     // Sayfa yüklendiğinde dosyaları yükle ve "Tüm Dosyalar" sekmesini varsayılan yap
     window.onload = () => {
       loadFiles();
