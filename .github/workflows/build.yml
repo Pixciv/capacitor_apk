@@ -24,18 +24,18 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Node.js Mobile plugin (Capacitor 7 compatible)
-        run: |
-          npm install https://github.com/hampoelz/capacitor-nodejs/releases/download/v1.0.0-beta.9/capacitor-nodejs.tgz --legacy-peer-deps
-          npx cap sync
-
-      - name: Prepare Node.js project for embedding
-        run: |
-          mkdir -p www/nodejs
-          cp -R node_modules www/nodejs/
+      # 🚨 BU ADIMI KALDIRIYORUZ - node_modules gerek yok
+      # - name: Prepare Node.js project for embedding
+      #   run: |
+      #     mkdir -p www/nodejs
+      #     cp -R node_modules www/nodejs/
 
       - name: Install Capacitor CLI globally
         run: npm install -g @capacitor/cli@latest
+
+      # ✅ YENİ ADIM: Sadece gerekli bağımlılıkları kur
+      - name: Install only production dependencies
+        run: npm install --production
 
       - name: Sync Capacitor
         run: npx cap sync
@@ -60,4 +60,3 @@ jobs:
         with:
           name: android-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
-
