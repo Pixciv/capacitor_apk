@@ -24,12 +24,6 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
-        run: npm install --legacy-peer-deps
-
-      - name: Install Office to HTML packages
-        run: npm install mammoth exceljs pptx-parser --save
-
       - name: Install Node.js Mobile plugin (Capacitor 7 compatible)
         run: |
           npm install https://github.com/hampoelz/capacitor-nodejs/releases/download/v1.0.0-beta.9/capacitor-nodejs.tgz --legacy-peer-deps
@@ -39,7 +33,6 @@ jobs:
         run: |
           mkdir -p www/nodejs
           cp -R node_modules www/nodejs/
-          cp backend/convert.js www/nodejs/convert.js
 
       - name: Install Capacitor CLI globally
         run: npm install -g @capacitor/cli@latest
@@ -67,3 +60,4 @@ jobs:
         with:
           name: android-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
+
