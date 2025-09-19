@@ -4,13 +4,87 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Office → HTML Viewer</title>
-<link rel="stylesheet" href="style.css">
+<style>
+body { font-family: Arial, sans-serif; padding: 20px; }
+button { margin-right: 10px; padding: 8px 12px; }
+#progressContainer { margin-top: 10px; height: 20px; width: 100%; background: #eee; border: 1px solid #ccc; border-radius: 4px; }
+#progressBar { height: 100%; width: 0%; background: #4caf50; text-align: center; color: white; line-height: 20px; border-radius: 4px; }
+#htmlContainer { margin-top: 20px; border: 1px solid #ccc; padding: 10px; max-height: 400px; overflow: auto; }
+.slide { border: 1px dashed #666; margin-bottom: 10px; padding: 5px; }
+table { border-collapse: collapse; width: 100%; }
+td, th { border: 1px solid #333; padding: 5px; }
+</style>
 </head>
 <body>
-  <h1>Office → HTML Viewer</h1>
-  <input type="file" id="fileInput" accept=".docx,.xlsx,.pptx"/>
-  <div id="htmlContainer" style="border:1px solid #ccc; padding:10px; margin-top:10px;"></div>
+<h1>Office → HTML Viewer</h1>
 
-  <script type="module" src="main.js"></script>
+<input type="file" id="fileInput" accept=".docx,.xlsx,.pptx"/>
+<button id="convertBtn">Dönüştür</button>
+<button id="viewBtn">Görüntüle</button>
+
+<div id="progressContainer">
+  <div id="progressBar">0%</div>
+</div>
+
+<div id="htmlContainer"></div>
+
+<script type="module">
+import { NodeJS } from 'capacitor-nodejs';
+
+const fileInput = document.getElementById("fileInput");
+const convertBtn = document.getElementById("convertBtn");
+const viewBtn = document.getElementById("viewBtn");
+const progressBar = document.getElementById("progressBar");
+const htmlContainer = document.getElementById("htmlContainer");
+
+let selectedFile = null;
+let convertedHtml = "";
+
+fileInput.addEventListener("change", (e) => {
+    selectedFile = e.target.files[0];
+    convertedHtml = "";
+    progressBar.style.width = "0%";
+    progressBar.textContent = "0%";
+    htmlContainer.innerHTML = "";
+});
+
+convertBtn.addEventListener("click", async () => {
+    if (!selectedFile) {
+        alert("Lütfen bir dosya seçin!");
+        return;
+    }
+
+    const filePath = selectedFile.path || selectedFile.name;
+
+    // Basit ilerleme simülasyonu
+    for (let i = 1; i <= 100; i++) {
+        await new Promise(res => setTimeout(res, 10));
+        progressBar.style.width = i + "%";
+        progressBar.textContent = i + "%";
+    }
+
+    try {
+        const result = await NodeJS.eval({
+            script: `
+                const { convertOfficeToHtml } = require('./convert.js');
+                convertOfficeToHtml("${filePath}")
+            `
+        });
+
+        convertedHtml = result.result; // NodeJS.eval sonucu .result içinde gelir
+        alert("Dönüştürme tamamlandı!");
+    } catch (err) {
+        alert("Hata: " + err);
+    }
+});
+
+viewBtn.addEventListener("click", () => {
+    if (!convertedHtml) {
+        alert("Henüz dosya dönüştürülmedi!");
+        return;
+    }
+    htmlContainer.innerHTML = convertedHtml;
+});
+</script>
 </body>
 </html>
