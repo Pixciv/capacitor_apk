@@ -102,8 +102,435 @@
       color: var(--secondary-text-color);
     }
     
-    /* Yeni CSS: Drawer Header */
     .drawer-header {
+      background-color: var(--primary-color);
+      color: #fff;
+      padding: 1.5rem;
+      font-size: 1.25rem;
+      font-weight: bold;
+    }
+
+    #importFile {
+      display: none;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
+      margin-bottom: 70px;
+    }
+
+    .file-list {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .file-item {
+      background-color: var(--card-background);
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+    }
+    
+    .file-item .icon {
+      font-size: 1.5rem;
+      color: var(--primary-color);
+      margin-right: 1rem;
+    }
+
+    .file-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .file-name {
+      font-size: 1rem;
+      font-weight: bold;
+      color: var(--text-color);
+      white-space: normal;
+      overflow-wrap: break-word;
+    }
+
+    .file-size {
+      font-size: 0.8rem;
+      color: var(--secondary-text-color);
+      margin-top: 0.2rem;
+    }
+    
+    .favorite-icon {
+        color: #ccc;
+        font-size: 1.25rem;
+        margin-left: 1rem;
+        cursor: pointer;
+    }
+    
+    .favorite-icon.favorited {
+        color: gold;
+    }
+
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: var(--card-background);
+      display: flex;
+      justify-content: space-around;
+      padding: 0.5rem 0;
+      box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+      border-top: 1px solid #ddd;
+    }
+
+    .bottom-bar .tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: var(--secondary-text-color);
+      cursor: pointer;
+      padding: 0.5rem;
+      flex-grow: 1;
+      background-color: #fff;
+    }
+
+    .bottom-bar .tab.active {
+      color: var(--primary-color);
+    }
+
+    .bottom-bar .tab i {
+      font-size: 1.25rem;
+    }
+    
+    .bottom-bar .tab span {
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+    }
+
+    /* Yeni CSS: Araçlar Sayfası */
+    .tools-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 1rem;
+        text-align: center;
+        margin-top: 1rem;
+    }
+
+    .tool-item {
+        background-color: var(--card-background);
+        padding: 1.5rem 1rem;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .tool-icon {
+        font-size: 2rem;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="drawer-menu" id="drawerMenu">
+    <div class="drawer-header">PDF Reader</div>
+    <ul class="menu-list">
+      <li class="menu-item" id="importFileMenuItem">
+        <i class="fas fa-file-import"></i>
+        <span>Import File</span>
+      </li>
+      <li class="menu-item">
+        <i class="fas fa-info-circle"></i>
+        <span>About</span>
+      </li>
+      <li class="menu-item">
+        <i class="fas fa-moon"></i>
+        <span>Dark Mode</span>
+      </li>
+      <li class="menu-item">
+        <i class="fas fa-language"></i>
+        <span>Language</span>
+      </li>
+    </ul>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+
+  <div class="header">
+    <i id="menuIcon" class="fas fa-bars menu-icon"></i>
+    <h2 id="pageTitle">Tüm Dosyalar</h2>
+  </div>
+
+  <div class="main-content" id="mainContent">
+    <ul id="pdfList" class="file-list"></ul>
+  </div>
+
+  <input type="file" id="importFile" multiple accept=".pdf"/>
+
+  <div class="bottom-bar">
+    <div class="tab" data-target="all-files">
+      <i class="fas fa-folder"></i>
+      <span>Tüm Dosyalar</span>
+    </div>
+    <div class="tab" data-target="recent">
+      <i class="fas fa-history"></i>
+      <span>Son Kullanılanlar</span>
+    </div>
+    <div class="tab" data-target="favorites">
+      <i class="fas fa-star"></i>
+      <span>Favoriler</span>
+    </div>
+    <div class="tab" data-target="tools">
+      <i class="fas fa-tools"></i>
+      <span>Araçlar</span>
+    </div>
+  </div>
+
+  <script type="module">
+    import { Filesystem, Directory } from '@capacitor/filesystem';
+
+    const menuIcon = document.getElementById('menuIcon');
+    const drawerMenu = document.getElementById('drawerMenu');
+    const overlay = document.getElementById('overlay');
+    const mainContent = document.getElementById('mainContent');
+    const importFileMenuItem = document.getElementById('importFileMenuItem');
+    const importFile = document.getElementById('importFile');
+    const pdfList = document.getElementById('pdfList');
+    const bottomBarTabs = document.querySelectorAll('.bottom-bar .tab');
+    const pageTitle = document.getElementById('pageTitle');
+
+    let touchStartX = 0;
+    let files = [];
+    
+    function loadFiles() {
+        const storedFiles = localStorage.getItem('pdfFiles');
+        if (storedFiles) {
+            files = JSON.parse(storedFiles);
+        }
+    }
+
+    function renderFiles(listType = 'all-files') {
+        let filesToRender = [];
+        let title = '';
+
+        if (listType === 'all-files') {
+            filesToRender = files;
+            title = 'Tüm Dosyalar';
+        } else if (listType === 'recent') {
+            filesToRender = files.filter(f => f.isRecent).sort((a, b) => new Date(b.lastOpened) - new Date(a.lastOpened));
+            title = 'Son Kullanılanlar';
+        } else if (listType === 'favorites') {
+            filesToRender = files.filter(f => f.isFavorite);
+            title = 'Favoriler';
+        } else if (listType === 'tools') {
+            pdfList.innerHTML = `
+                <div class="tools-grid">
+                    <div class="tool-item">
+                        <i class="fas fa-compress-arrows-alt tool-icon"></i>
+                        <span>PDF Sıkıştır</span>
+                    </div>
+                    <div class="tool-item">
+                        <i class="fas fa-file-signature tool-icon"></i>
+                        <span>İmza Ekle</span>
+                    </div>
+                    <div class="tool-item">
+                        <i class="fas fa-highlighter tool-icon"></i>
+                        <span>Vurgula</span>
+                    </div>
+                    <div class="tool-item">
+                        <i class="fas fa-edit tool-icon"></i>
+                        <span>Metin Düzenle</span>
+                    </div>
+                </div>
+            `;
+            pageTitle.textContent = 'Araçlar';
+            return;
+        }
+
+        pageTitle.textContent = title;
+        pdfList.innerHTML = '';
+        if (filesToRender.length === 0) {
+            const emptyState = document.createElement('p');
+            emptyState.textContent = 'Henüz hiç dosyanız yok.';
+            emptyState.style.textAlign = 'center';
+            emptyState.style.marginTop = '2rem';
+            pdfList.appendChild(emptyState);
+        } else {
+            filesToRender.forEach(file => {
+                const li = document.createElement('li');
+                li.className = 'file-item';
+                li.innerHTML = `
+                    <div class="icon"><i class="fas fa-file-pdf"></i></div>
+                    <div class="file-details">
+                        <span class="file-name">${file.name}</span>
+                        <span class="file-size">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                    </div>
+                    <i class="fas fa-star favorite-icon ${file.isFavorite ? 'favorited' : ''}"></i>
+                `;
+                li.querySelector('.file-details').addEventListener('click', () => {
+                    updateRecent(file.url);
+                    window.open(`web/viewer.html?file=${encodeURIComponent(file.url)}`, '_blank');
+                });
+                li.querySelector('.favorite-icon').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleFavorite(file.url);
+                });
+                pdfList.appendChild(li);
+            });
+        }
+    }
+
+    function updateRecent(fileUrl) {
+        const file = files.find(f => f.url === fileUrl);
+        if (file) {
+            file.isRecent = true;
+            file.lastOpened = new Date().toISOString();
+            saveFiles();
+        }
+    }
+
+    function toggleFavorite(fileUrl) {
+        const file = files.find(f => f.url === fileUrl);
+        if (file) {
+            file.isFavorite = !file.isFavorite;
+            saveFiles();
+            renderFiles(document.querySelector('.bottom-bar .tab.active').dataset.target);
+        }
+    }
+
+    function saveFiles() {
+        localStorage.setItem('pdfFiles', JSON.stringify(files));
+    }
+
+    function toggleDrawer(open) {
+        if (open) {
+            drawerMenu.classList.add('open');
+            overlay.style.display = 'block';
+        } else {
+            drawerMenu.classList.remove('open');
+            overlay.style.display = 'none';
+        }
+    }
+
+    const swipeTargets = [mainContent, drawerMenu];
+    
+    swipeTargets.forEach(target => {
+        target.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+        });
+
+        target.addEventListener('touchmove', (e) => {
+            const touchMoveX = e.touches[0].clientX;
+            const diff = touchMoveX - touchStartX;
+            
+            if (diff > 50 && !drawerMenu.classList.contains('open') && target === mainContent) {
+                toggleDrawer(true);
+            } else if (diff < -50 && drawerMenu.classList.contains('open')) {
+                toggleDrawer(false);
+            }
+        });
+    });
+
+    menuIcon.addEventListener('click', () => {
+        toggleDrawer(true);
+    });
+
+    overlay.addEventListener('click', () => {
+        toggleDrawer(false);
+    });
+    
+    importFileMenuItem.addEventListener('click', () => {
+        importFile.click();
+    });
+    
+    bottomBarTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            bottomBarTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            renderFiles(tab.dataset.target);
+        });
+    });
+
+    importFile.addEventListener('change', () => {
+        Array.from(importFile.files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = async () => {
+                const fileName = file.name;
+                const fileData = reader.result;
+
+                try {
+                    let finalFileName = fileName;
+                    let counter = 1;
+                    while (await fileExistsInAppFolder('pdfdoc', finalFileName)) {
+                        const fileNameWithoutExt = finalFileName.split('.').slice(0, -1).join('.');
+                        const fileExt = finalFileName.split('.').pop();
+                        finalFileName = `${fileNameWithoutExt}(${counter}).${fileExt}`;
+                        counter++;
+                    }
+
+                    await Filesystem.writeFile({
+                        path: `pdfdoc/${finalFileName}`,
+                        data: fileData,
+                        directory: Directory.Data
+                    });
+
+                    const fileEntry = {
+                        name: finalFileName,
+                        size: file.size,
+                        url: `capacitor-data://pdfdoc/${finalFileName}`,
+                        isRecent: false,
+                        isFavorite: false,
+                        lastOpened: null
+                    };
+                    files.push(fileEntry);
+                    saveFiles();
+                    renderFiles('all-files');
+                } catch (error) {
+                    console.error('Dosya kaydetme hatası:', error);
+                    alert('Dosya kaydedilirken bir hata oluştu.');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+        toggleDrawer(false);
+    });
+    
+    async function fileExistsInAppFolder(directory, fileName) {
+        try {
+            await Filesystem.stat({
+                path: `${directory}/${fileName}`,
+                directory: Directory.Data
+            });
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    window.onload = () => {
+      loadFiles();
+      renderFiles('all-files');
+      bottomBarTabs.forEach(tab => {
+          if (tab.dataset.target === 'all-files') {
+              tab.classList.add('active');
+          } else {
+              tab.classList.remove('active');
+          }
+      });
+    };
+  </script>
+</body>
+</html>
       background-color: var(--primary-color);
       color: #fff;
       padding: 1.5rem;
