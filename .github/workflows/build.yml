@@ -29,11 +29,8 @@ jobs:
 
       # 📦 Bağımlılıkları yükle (peer dependency hatalarını görmezden gel)
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
+        run: npm install mammoth exceljs pptx-parser @capacitor/filesystem @capacitor/filesharing --legacy-peer-deps
 
-      # 📦 office-to-pdf paketini yükle
-      - name: Install office-to-pdf
-        run: npm install office-to-pdf --save
 
       # ✨ Node.js Mobile plugin yükle (Capacitor 7 uyumlu beta)
       - name: Install Node.js Mobile plugin (Capacitor 7 compatible)
