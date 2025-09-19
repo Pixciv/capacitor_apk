@@ -29,8 +29,12 @@ jobs:
 
       # 📦 Bağımlılıkları yükle (peer dependency hatalarını görmezden gel)
       - name: Install dependencies
-        run: npm install mammoth exceljs pptx-parser @capacitor/filesystem @capacitor/filesharing --legacy-peer-deps
+        run: npm install --legacy-peer-deps
 
+      # 📦 Office → HTML paketlerini yükle
+      - name: Install Office to HTML packages
+        run: |
+          npm install mammoth exceljs pptx-parser --save
 
       # ✨ Node.js Mobile plugin yükle (Capacitor 7 uyumlu beta)
       - name: Install Node.js Mobile plugin (Capacitor 7 compatible)
@@ -42,11 +46,9 @@ jobs:
       - name: Prepare Node.js project for embedding
         run: |
           mkdir -p www/nodejs
-          # Node.js modüllerini www/nodejs dizinine kopyala
           cp -R node_modules www/nodejs/
-          # Node.js backend kodunu kopyala
-          # Bu komutu kendi Node.js dosyalarınızı kopyalayacak şekilde değiştirin
-          echo "const fs = require('fs'); const path = require('path'); const officeToPdf = require('office-to-pdf'); async function convertFileToPDF(inputPath) { const ext = path.extname(inputPath).toLowerCase(); const outputPath = inputPath.replace(ext, '.pdf'); if(ext === '.pdf') { return inputPath; } try { const fileData = fs.readFileSync(inputPath); const pdfBuffer = await officeToPdf(fileData); fs.writeFileSync(outputPath, pdfBuffer); return outputPath; } catch (err) { console.error('Conversion error:', err); throw err; } } global.convertFileToPDF = convertFileToPDF;" > www/nodejs/convert.js
+          # Node.js backend kodunu kendi convert.js dosyan ile kopyala
+          cp backend/convert.js www/nodejs/convert.js
 
       # ⚡ Capacitor CLI güncel
       - name: Install Capacitor CLI globally
