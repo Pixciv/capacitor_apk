@@ -66,12 +66,12 @@ convertBtn.addEventListener("click", async () => {
     try {
         const result = await NodeJS.eval({
             script: `
-                const { convertOfficeToHtml } = require('./convert.js');
+                const { convertOfficeToHtml } = require('www/nodejs/convert.js');
                 convertOfficeToHtml("${filePath}")
             `
         });
 
-        convertedHtml = result.result; // NodeJS.eval sonucu .result içinde gelir
+        convertedHtml = result.result; 
         alert("Dönüştürme tamamlandı!");
     } catch (err) {
         alert("Hata: " + err);
