@@ -30,6 +30,7 @@ td, th { border: 1px solid #333; padding: 5px; }
 
 <script type="module">
 import { NodeJS } from 'capacitor-nodejs';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 
 const fileInput = document.getElementById("fileInput");
 const convertBtn = document.getElementById("convertBtn");
@@ -54,27 +55,45 @@ convertBtn.addEventListener("click", async () => {
         return;
     }
 
-    const filePath = selectedFile.path || selectedFile.name;
+    const file = selectedFile;
 
+    // İlerleme bar simülasyonu
     for (let i = 1; i <= 100; i++) {
-        await new Promise(res => setTimeout(res, 10));
+        await new Promise(res => setTimeout(res, 5));
         progressBar.style.width = i + "%";
         progressBar.textContent = i + "%";
     }
 
-    try {
-        const result = await NodeJS.eval({
-            script: `
-                const { convertOfficeToHtml } = require('www/nodejs/convert.js');
-                convertOfficeToHtml("${filePath}")
-            `
-        });
+    // Dosya blob -> base64
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        const base64Data = e.target.result.split(',')[1];
 
-        convertedHtml = result.result; 
-        alert("Dönüştürme tamamlandı!");
-    } catch (err) {
-        alert("Hata: " + err);
-    }
+        try {
+            // Dosyayı Android sandbox içine yaz
+            const saved = await Filesystem.writeFile({
+                path: file.name,
+                data: base64Data,
+                directory: Directory.Data
+            });
+
+            const filePath = saved.uri; // NodeJS Mobile için gerçek path
+
+            // NodeJS Mobile ile dönüştür
+            const result = await NodeJS.eval({
+                script: `
+                    const { convertOfficeToHtml } = require('www/nodejs/convert.js');
+                    convertOfficeToHtml("${filePath}")
+                `
+            });
+
+            convertedHtml = result.result;
+            alert("Dönüştürme tamamlandı!");
+        } catch (err) {
+            alert("Dönüştürme hatası: " + err);
+        }
+    };
+    reader.readAsDataURL(file);
 });
 
 viewBtn.addEventListener("click", () => {
