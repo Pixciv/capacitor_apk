@@ -6,6 +6,7 @@
   <title>Treb Edit PDF Okuyucu</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
+    /* CSS kodu aynı kalacak, değişiklik yok */
     :root {
       --primary-color: #f44336;
       --background-color: #f0f2f5;
@@ -24,7 +25,6 @@
       flex-direction: column;
       height: 100vh;
       overflow: hidden;
-      /* Status bar'ın altına itmek için */
       padding-top: env(safe-area-inset-top);
     }
 
@@ -70,7 +70,6 @@
       box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
       transition: left 0.3s ease;
       z-index: 1000;
-      /* Status bar altına doğru itmek için */
       padding-top: env(safe-area-inset-top);
     }
 
@@ -299,249 +298,306 @@
     </div>
   </div>
 
-  <script type="module">
-    import { Filesystem, Directory } from '@capacitor/filesystem';
-    import { WebView } from '@capacitor/core';
-    
-    // Uygulamada kullanılacak sabitleri ve DOM öğelerini tanımlama
-    const menuIcon = document.getElementById('menuIcon');
-    const drawerMenu = document.getElementById('drawerMenu');
-    const overlay = document.getElementById('overlay');
-    const mainContent = document.getElementById('mainContent');
-    const importFileMenuItem = document.getElementById('importFileMenuItem');
-    const importFile = document.getElementById('importFile');
-    const pdfList = document.getElementById('pdfList');
-    const bottomBarTabs = document.querySelectorAll('.bottom-bar .tab');
-    const pageTitle = document.getElementById('pageTitle');
+  <script>
+    // Capacitor importları için async fonksiyon
+    async function initApp() {
+      let Filesystem, Directory, WebView;
+      
+      try {
+        // Capacitor modüllerini dynamic import et
+        const capacitorCore = await import('@capacitor/core');
+        WebView = capacitorCore.WebView;
+        
+        const capacitorFilesystem = await import('@capacitor/filesystem');
+        Filesystem = capacitorFilesystem.Filesystem;
+        Directory = capacitorFilesystem.Directory;
+        
+        console.log('Capacitor modülleri yüklendi');
+      } catch (error) {
+        console.warn('Capacitor modülleri yüklenemedi, fallback modunda çalışılıyor:', error);
+        // Fallback: Capacitor olmadan da çalışabilmesi için
+        Filesystem = null;
+      }
 
-    let touchStartX = 0;
-    let files = [];
-    
-    // localStorage'dan dosyaları yükleme
-    function loadFiles() {
-        const storedFiles = localStorage.getItem('pdfFiles');
-        if (storedFiles) {
-            files = JSON.parse(storedFiles);
-        }
-    }
+      const menuIcon = document.getElementById('menuIcon');
+      const drawerMenu = document.getElementById('drawerMenu');
+      const overlay = document.getElementById('overlay');
+      const mainContent = document.getElementById('mainContent');
+      const importFileMenuItem = document.getElementById('importFileMenuItem');
+      const importFile = document.getElementById('importFile');
+      const pdfList = document.getElementById('pdfList');
+      const bottomBarTabs = document.querySelectorAll('.bottom-bar .tab');
+      const pageTitle = document.getElementById('pageTitle');
 
-    // Dosyaları ekrana render etme
-    function renderFiles(listType = 'all-files') {
-        let filesToRender = [];
-        let title = '';
+      let touchStartX = 0;
+      let files = [];
+      
+      // localStorage'dan dosyaları yükleme
+      function loadFiles() {
+          const storedFiles = localStorage.getItem('pdfFiles');
+          if (storedFiles) {
+              files = JSON.parse(storedFiles);
+          }
+      }
 
-        if (listType === 'all-files') {
-            filesToRender = files;
-            title = 'Tüm Dosyalar';
-        } else if (listType === 'recent') {
-            filesToRender = files.filter(f => f.isRecent).sort((a, b) => new Date(b.lastOpened) - new Date(a.lastOpened));
-            title = 'Son Kullanılanlar';
-        } else if (listType === 'favorites') {
-            filesToRender = files.filter(f => f.isFavorite);
-            title = 'Favoriler';
-        } else if (listType === 'tools') {
-            pdfList.innerHTML = `
-                <div class="tools-grid">
-                    <div class="tool-item">
-                        <i class="fas fa-compress-arrows-alt tool-icon"></i>
-                        <span>PDF Sıkıştır</span>
-                    </div>
-                    <div class="tool-item">
-                        <i class="fas fa-file-signature tool-icon"></i>
-                        <span>İmza Ekle</span>
-                    </div>
-                    <div class="tool-item">
-                        <i class="fas fa-highlighter tool-icon"></i>
-                        <span>Vurgula</span>
-                    </div>
-                    <div class="tool-item">
-                        <i class="fas fa-edit tool-icon"></i>
-                        <span>Metin Düzenle</span>
-                    </div>
-                </div>
-            `;
-            pageTitle.textContent = 'Araçlar';
-            return;
-        }
+      // Dosyaları ekrana render etme
+      function renderFiles(listType = 'all-files') {
+          let filesToRender = [];
+          let title = '';
 
-        pageTitle.textContent = title;
-        pdfList.innerHTML = '';
-        if (filesToRender.length === 0) {
-            const emptyState = document.createElement('p');
-            emptyState.textContent = 'Henüz hiç dosyanız yok.';
-            emptyState.style.textAlign = 'center';
-            emptyState.style.marginTop = '2rem';
-            pdfList.appendChild(emptyState);
-        } else {
-            filesToRender.forEach(file => {
-                const li = document.createElement('li');
-                li.className = 'file-item';
-                li.innerHTML = `
-                    <div class="icon"><i class="fas fa-file-pdf"></i></div>
-                    <div class="file-details">
-                        <span class="file-name">${file.name}</span>
-                        <span class="file-size">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
-                    </div>
-                    <i class="fas fa-star favorite-icon ${file.isFavorite ? 'favorited' : ''}"></i>
-                `;
-                li.querySelector('.file-details').addEventListener('click', () => {
-                    updateRecent(file.url);
-                    // PDF.js viewer'ı açmak için Capacitor'ın WebView API'sini kullanıyoruz
-                    window.open(`web/viewer.html?file=${encodeURIComponent(file.url)}`, '_self');
-                });
-                li.querySelector('.favorite-icon').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    toggleFavorite(file.url);
-                });
-                pdfList.appendChild(li);
-            });
-        }
-    }
+          if (listType === 'all-files') {
+              filesToRender = files;
+              title = 'Tüm Dosyalar';
+          } else if (listType === 'recent') {
+              filesToRender = files.filter(f => f.isRecent).sort((a, b) => new Date(b.lastOpened) - new Date(a.lastOpened));
+              title = 'Son Kullanılanlar';
+          } else if (listType === 'favorites') {
+              filesToRender = files.filter(f => f.isFavorite);
+              title = 'Favoriler';
+          } else if (listType === 'tools') {
+              pdfList.innerHTML = `
+                  <div class="tools-grid">
+                      <div class="tool-item">
+                          <i class="fas fa-compress-arrows-alt tool-icon"></i>
+                          <span>PDF Sıkıştır</span>
+                      </div>
+                      <div class="tool-item">
+                          <i class="fas fa-file-signature tool-icon"></i>
+                          <span>İmza Ekle</span>
+                      </div>
+                      <div class="tool-item">
+                          <i class="fas fa-highlighter tool-icon"></i>
+                          <span>Vurgula</span>
+                      </div>
+                      <div class="tool-item">
+                          <i class="fas fa-edit tool-icon"></i>
+                          <span>Metin Düzenle</span>
+                      </div>
+                  </div>
+              `;
+              pageTitle.textContent = 'Araçlar';
+              return;
+          }
 
-    // Dosyayı son kullanılanlar listesine ekleme
-    function updateRecent(fileUrl) {
-        const file = files.find(f => f.url === fileUrl);
-        if (file) {
-            file.isRecent = true;
-            file.lastOpened = new Date().toISOString();
-            saveFiles();
-        }
-    }
+          pageTitle.textContent = title;
+          pdfList.innerHTML = '';
+          if (filesToRender.length === 0) {
+              const emptyState = document.createElement('p');
+              emptyState.textContent = 'Henüz hiç dosyanız yok.';
+              emptyState.style.textAlign = 'center';
+              emptyState.style.marginTop = '2rem';
+              pdfList.appendChild(emptyState);
+          } else {
+              filesToRender.forEach(file => {
+                  const li = document.createElement('li');
+                  li.className = 'file-item';
+                  li.innerHTML = `
+                      <div class="icon"><i class="fas fa-file-pdf"></i></div>
+                      <div class="file-details">
+                          <span class="file-name">${file.name}</span>
+                          <span class="file-size">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                      </div>
+                      <i class="fas fa-star favorite-icon ${file.isFavorite ? 'favorited' : ''}"></i>
+                  `;
+                  li.querySelector('.file-details').addEventListener('click', () => {
+                      updateRecent(file.url);
+                      // PDF.js viewer'ı aç
+                      window.open(`web/viewer.html?file=${encodeURIComponent(file.url)}`, '_self');
+                  });
+                  li.querySelector('.favorite-icon').addEventListener('click', (e) => {
+                      e.stopPropagation();
+                      toggleFavorite(file.url);
+                  });
+                  pdfList.appendChild(li);
+              });
+          }
+      }
 
-    // Dosyayı favorilere ekleme/çıkarma
-    function toggleFavorite(fileUrl) {
-        const file = files.find(f => f.url === fileUrl);
-        if (file) {
-            file.isFavorite = !file.isFavorite;
-            saveFiles();
-            renderFiles(document.querySelector('.bottom-bar .tab.active').dataset.target);
-        }
-    }
+      // Dosyayı son kullanılanlar listesine ekleme
+      function updateRecent(fileUrl) {
+          const file = files.find(f => f.url === fileUrl);
+          if (file) {
+              file.isRecent = true;
+              file.lastOpened = new Date().toISOString();
+              saveFiles();
+          }
+      }
 
-    // Dosyaları kaydetme
-    function saveFiles() {
-        localStorage.setItem('pdfFiles', JSON.stringify(files));
-    }
+      // Dosyayı favorilere ekleme/çıkarma
+      function toggleFavorite(fileUrl) {
+          const file = files.find(f => f.url === fileUrl);
+          if (file) {
+              file.isFavorite = !file.isFavorite;
+              saveFiles();
+              renderFiles(document.querySelector('.bottom-bar .tab.active').dataset.target);
+          }
+      }
 
-    // Drawer menüyü aç/kapa fonksiyonu
-    function toggleDrawer(open) {
-        if (open) {
-            drawerMenu.classList.add('open');
-            overlay.style.display = 'block';
-        } else {
-            drawerMenu.classList.remove('open');
-            overlay.style.display = 'none';
-        }
-    }
+      // Dosyaları kaydetme
+      function saveFiles() {
+          localStorage.setItem('pdfFiles', JSON.stringify(files));
+      }
 
-    // Dokunmatik hareket (swipe) yönetimi
-    const swipeTargets = [mainContent, drawerMenu];
-    
-    swipeTargets.forEach(target => {
-        target.addEventListener('touchstart', (e) => {
-            touchStartX = e.touches[0].clientX;
-        });
+      // Drawer menüyü aç/kapa fonksiyonu
+      function toggleDrawer(open) {
+          if (open) {
+              drawerMenu.classList.add('open');
+              overlay.style.display = 'block';
+          } else {
+              drawerMenu.classList.remove('open');
+              overlay.style.display = 'none';
+          }
+      }
 
-        target.addEventListener('touchmove', (e) => {
-            const touchMoveX = e.touches[0].clientX;
-            const diff = touchMoveX - touchStartX;
-            
-            if (diff > 50 && !drawerMenu.classList.contains('open') && target === mainContent) {
-                toggleDrawer(true);
-            } else if (diff < -50 && drawerMenu.classList.contains('open')) {
-                toggleDrawer(false);
-            }
-        });
-    });
+      // Dokunmatik hareket (swipe) yönetimi
+      const swipeTargets = [mainContent, drawerMenu];
+      
+      swipeTargets.forEach(target => {
+          target.addEventListener('touchstart', (e) => {
+              touchStartX = e.touches[0].clientX;
+          });
 
-    // Menü butonu tıklaması
-    menuIcon.addEventListener('click', () => {
-        toggleDrawer(true);
-    });
+          target.addEventListener('touchmove', (e) => {
+              const touchMoveX = e.touches[0].clientX;
+              const diff = touchMoveX - touchStartX;
+              
+              if (diff > 50 && !drawerMenu.classList.contains('open') && target === mainContent) {
+                  toggleDrawer(true);
+              } else if (diff < -50 && drawerMenu.classList.contains('open')) {
+                  toggleDrawer(false);
+              }
+          });
+      });
 
-    // Overlay'a tıklayarak menüyü kapatma
-    overlay.addEventListener('click', () => {
-        toggleDrawer(false);
-    });
-    
-    // "Import File" menü öğesi tıklaması
-    importFileMenuItem.addEventListener('click', () => {
-        importFile.click();
-    });
-    
-    // Alt menü sekmeleri tıklaması
-    bottomBarTabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            bottomBarTabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            renderFiles(tab.dataset.target);
-        });
-    });
+      // Menü butonu tıklaması
+      menuIcon.addEventListener('click', () => {
+          toggleDrawer(true);
+      });
 
-    // Yeni dosya seçildiğinde
-    importFile.addEventListener('change', () => {
-        Array.from(importFile.files).forEach(file => {
-            const reader = new FileReader();
-            reader.onload = async () => {
-                const fileName = file.name;
-                const fileData = reader.result; // ArrayBuffer olarak dosya verisi
+      // Overlay'a tıklayarak menüyü kapatma
+      overlay.addEventListener('click', () => {
+          toggleDrawer(false);
+      });
+      
+      // "Import File" menü öğesi tıklaması
+      importFileMenuItem.addEventListener('click', () => {
+          importFile.click();
+      });
+      
+      // Alt menü sekmeleri tıklaması
+      bottomBarTabs.forEach(tab => {
+          tab.addEventListener('click', () => {
+              bottomBarTabs.forEach(t => t.classList.remove('active'));
+              tab.classList.add('active');
+              renderFiles(tab.dataset.target);
+          });
+      });
 
-                try {
-                    // Dosya adını çakışma durumunda yeniden adlandır
-                    let finalFileName = fileName;
-                    let counter = 1;
-                    while (await fileExistsInAppFolder('pdfdoc', finalFileName)) {
-                        const fileNameWithoutExt = finalFileName.split('.').slice(0, -1).join('.');
-                        const fileExt = finalFileName.split('.').pop();
-                        finalFileName = `${fileNameWithoutExt}(${counter}).${fileExt}`;
-                        counter++;
-                    }
+      // Yeni dosya seçildiğinde
+      importFile.addEventListener('change', async () => {
+          const filePromises = Array.from(importFile.files).map(async (file) => {
+              const reader = new FileReader();
+              
+              return new Promise((resolve) => {
+                  reader.onload = async () => {
+                      let fileName = file.name;
+                      
+                      if (Filesystem) {
+                          // Capacitor ile dosya kaydetme
+                          try {
+                              let finalFileName = fileName;
+                              let counter = 1;
+                              
+                              // Çakışma kontrolü
+                              while (await fileExistsInAppFolder('pdfdoc', finalFileName)) {
+                                  const fileNameWithoutExt = finalFileName.split('.').slice(0, -1).join('.');
+                                  const fileExt = finalFileName.split('.').pop();
+                                  finalFileName = `${fileNameWithoutExt}(${counter}).${fileExt}`;
+                                  counter++;
+                              }
 
-                    // Dosyayı Capacitor Filesystem'e kaydet
-                    await Filesystem.writeFile({
-                        path: `pdfdoc/${finalFileName}`,
-                        data: fileData,
-                        directory: Directory.Data,
-                        recursive: true
-                    });
+                              // Dosyayı kaydet
+                              await Filesystem.writeFile({
+                                  path: `pdfdoc/${finalFileName}`,
+                                  data: reader.result,
+                                  directory: Directory.Data,
+                                  recursive: true
+                              });
 
-                    // Dosya listesine ekle
-                    const fileEntry = {
-                        name: finalFileName,
-                        size: file.size,
-                        url: WebView.convertFileSrc(`file:///data/data/com.example.app/files/pdfdoc/${finalFileName}`),
-                        isRecent: false,
-                        isFavorite: false,
-                        lastOpened: null
-                    };
-                    files.push(fileEntry);
-                    saveFiles();
-                    renderFiles('all-files');
-                } catch (error) {
-                    console.error('Dosya kaydetme hatası:', error);
-                    alert('Dosya kaydedilirken bir hata oluştu.');
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        });
-        toggleDrawer(false);
-    });
-    
-    // Yardımcı fonksiyon: Dosyanın varlığını kontrol et
-    async function fileExistsInAppFolder(directory, fileName) {
-        try {
-            await Filesystem.stat({
-                path: `${directory}/${fileName}`,
-                directory: Directory.Data
-            });
-            return true;
-        } catch (e) {
-            return false;
-        }
-    }
+                              // Dosya URL'sini oluştur
+                              const fileEntry = {
+                                  name: finalFileName,
+                                  size: file.size,
+                                  url: `file:///data/user/0/com.arvinapp.pdfreader/files/pdfdoc/${finalFileName}`,
+                                  isRecent: false,
+                                  isFavorite: false,
+                                  lastOpened: null
+                              };
+                              resolve(fileEntry);
+                              
+                          } catch (error) {
+                              console.error('Capacitor dosya kaydetme hatası:', error);
+                              // Fallback: Blob URL ile devam et
+                              const blob = new Blob([reader.result], { type: 'application/pdf' });
+                              const url = URL.createObjectURL(blob);
+                              
+                              const fileEntry = {
+                                  name: fileName,
+                                  size: file.size,
+                                  url: url,
+                                  isRecent: false,
+                                  isFavorite: false,
+                                  lastOpened: null
+                              };
+                              resolve(fileEntry);
+                          }
+                      } else {
+                          // Capacitor yoksa blob URL kullan
+                          const blob = new Blob([reader.result], { type: 'application/pdf' });
+                          const url = URL.createObjectURL(blob);
+                          
+                          const fileEntry = {
+                              name: fileName,
+                              size: file.size,
+                              url: url,
+                              isRecent: false,
+                              isFavorite: false,
+                              lastOpened: null
+                          };
+                          resolve(fileEntry);
+                      }
+                  };
+                  reader.readAsArrayBuffer(file);
+              });
+          });
 
-    // Sayfa yüklendiğinde dosyaları yükle ve "Tüm Dosyalar" sekmesini varsayılan yap
-    window.onload = () => {
+          try {
+              const newFiles = await Promise.all(filePromises);
+              files.push(...newFiles);
+              saveFiles();
+              renderFiles('all-files');
+          } catch (error) {
+              console.error('Dosya işleme hatası:', error);
+              alert('Dosyalar işlenirken bir hata oluştu.');
+          }
+          
+          toggleDrawer(false);
+      });
+      
+      // Yardımcı fonksiyon: Dosyanın varlığını kontrol et
+      async function fileExistsInAppFolder(directory, fileName) {
+          try {
+              await Filesystem.stat({
+                  path: `${directory}/${fileName}`,
+                  directory: Directory.Data
+              });
+              return true;
+          } catch (e) {
+              return false;
+          }
+      }
+
+      // Uygulamayı başlat
       loadFiles();
       renderFiles('all-files');
       bottomBarTabs.forEach(tab => {
@@ -551,7 +607,10 @@
               tab.classList.remove('active');
           }
       });
-    };
+    }
+
+    // Uygulamayı başlat
+    document.addEventListener('DOMContentLoaded', initApp);
   </script>
 </body>
 </html>
