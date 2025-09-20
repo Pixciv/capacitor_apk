@@ -33,6 +33,29 @@
         console.error("Base64 verisi decode edilirken hata oluştu:", error);
       }
     }
+
+    // URL'deki 'file' parametresini kontrol et.
+    const urlParams = new URLSearchParams(window.location.search);
+    const fileUrl = urlParams.get('file');
+
+    if (fileUrl) {
+        try {
+            // Blob URL'sini decode et
+            const decodedUrl = decodeURIComponent(fileUrl);
+            
+            // PDF.js'e blob URL'sini yükle
+            PDFViewerApplicationOptions.set('defaultUrl', decodedUrl);
+            
+            // Sayfa yüklendikten sonra PDF'i aç
+            window.addEventListener('load', function() {
+                PDFViewerApplication.open(decodedUrl);
+            });
+        } catch (error) {
+            console.error("PDF yüklenirken hata oluştu:", error);
+        }
+    }
+
+    
   </script>
   </head>
 
