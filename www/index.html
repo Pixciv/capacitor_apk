@@ -147,14 +147,14 @@
             fileInput.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 if (file && file.type === 'application/pdf') {
-                    // Dosyayı Base64'e çevir ve sakla
+                    // Dosyayı ArrayBuffer'a çevir ve sakla
                     const reader = new FileReader();
                     reader.onload = function(event) {
-                        const base64Data = event.target.result;
-                        savePdf(file.name, base64Data);
+                        const arrayBuffer = event.target.result;
+                        savePdf(file.name, arrayBuffer);
                         loadPdfList();
                     };
-                    reader.readAsDataURL(file);
+                    reader.readAsArrayBuffer(file);
                 } else {
                     alert('Lütfen geçerli bir PDF dosyası seçin.');
                 }
@@ -210,9 +210,19 @@
             function openPdf(index) {
                 const pdfs = getSavedPdfs();
                 if (pdfs[index]) {
-                    const base64Data = pdfs[index].data;
+                    const arrayBuffer = pdfs[index].data;
+                    
+                    // ArrayBuffer'ı Uint8Array'e dönüştür
+                    const uint8Array = new Uint8Array(arrayBuffer);
+                    
+                    // Blob oluştur
+                    const blob = new Blob([uint8Array], { type: 'application/pdf' });
+                    
+                    // Blob URL oluştur
+                    const blobUrl = URL.createObjectURL(blob);
+                    
                     // PDF viewer'a yönlendir
-                    window.location.href = `web/viewer.html?file=${encodeURIComponent(base64Data)}`;
+                    window.location.href = `web/viewer.html?file=${encodeURIComponent(blobUrl)}`;
                 }
             }
             
@@ -225,9 +235,13 @@
             // PDF'i yerel depolamaya kaydetme
             function savePdf(name, data) {
                 const pdfs = getSavedPdfs();
+                
+                // ArrayBuffer'ı saklayabilmek için normal diziye dönüştür
+                const array = Array.from(new Uint8Array(data));
+                
                 pdfs.push({
                     name: name,
-                    data: data,
+                    data: array,
                     date: new Date().toISOString()
                 });
                 localStorage.setItem('savedPdfs', JSON.stringify(pdfs));
