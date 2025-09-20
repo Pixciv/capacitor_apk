@@ -115,6 +115,12 @@
         .delete-btn:hover {
             background-color: #d32f2f;
         }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #4285f4;
+        }
     </style>
 </head>
 <body>
@@ -145,4 +151,182 @@
             
             // Dosya seçme olayını dinle
             fileInput.addEventListener('change', function(e) {
-                const file = e.target.files
+                const file = e.target.files[0];
+                if (file && file.type === 'application/pdf') {
+                    // Yükleme durumunu göster
+                    pdfListContainer.innerHTML = '<div class="loading">Dosya yükleniyor...</div>';
+                    
+                    // Dosyayı doğrudan sakla (IndexedDB kullanarak)
+                    savePdfToIndexedDB(file);
+                } else {
+                    alert('Lütfen geçerli bir PDF dosyası seçin.');
+                }
+                
+                // Input'u sıfırla
+                fileInput.value = '';
+            });
+            
+            // PDF listesini yükleme fonksiyonu
+            function loadPdfList() {
+                getPdfsFromIndexedDB(function(pdfs) {
+                    if (pdfs.length === 0) {
+                        pdfListContainer.innerHTML = '<div class="empty-list">Henüz bir PDF dosyası eklenmedi.</div>';
+                        return;
+                    }
+                    
+                    let html = '';
+                    pdfs.forEach((pdf, index) => {
+                        const date = new Date(pdf.date).toLocaleDateString('tr-TR');
+                        html += `
+                            <div class="pdf-item" data-id="${pdf.id}">
+                                <div class="pdf-name">${pdf.name}</div>
+                                <div class="pdf-date">${date}</div>
+                                <button class="delete-btn" data-id="${pdf.id}">Sil</button>
+                            </div>
+                        `;
+                    });
+                    
+                    pdfListContainer.innerHTML = html;
+                    
+                    // Tıklama olaylarını ekle
+                    document.querySelectorAll('.pdf-item').forEach(item => {
+                        item.addEventListener('click', function(e) {
+                            if (!e.target.classList.contains('delete-btn')) {
+                                const id = this.getAttribute('data-id');
+                                openPdf(id);
+                            }
+                        });
+                    });
+                    
+                    // Silme butonlarına olay ekle
+                    document.querySelectorAll('.delete-btn').forEach(btn => {
+                        btn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            const id = this.getAttribute('data-id');
+                            if (confirm('Bu PDF\'i silmek istediğinize emin misiniz?')) {
+                                deletePdfFromIndexedDB(id, function() {
+                                    loadPdfList();
+                                });
+                            }
+                        });
+                    });
+                });
+            }
+            
+            // PDF açma fonksiyonu
+            function openPdf(id) {
+                getPdfFromIndexedDB(id, function(file) {
+                    if (file) {
+                        // Blob URL oluştur
+                        const blobUrl = URL.createObjectURL(file);
+                        
+                        // PDF viewer'a yönlendir
+                        window.location.href = `web/viewer.html?file=${encodeURIComponent(blobUrl)}`;
+                    }
+                });
+            }
+            
+            // IndexedDB işlemleri
+            function getDB(callback) {
+                const request = indexedDB.open('PDFStore', 1);
+                
+                request.onupgradeneeded = function(event) {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains('pdfs')) {
+                        const store = db.createObjectStore('pdfs', { keyPath: 'id', autoIncrement: true });
+                        store.createIndex('name', 'name', { unique: false });
+                        store.createIndex('date', 'date', { unique: false });
+                    }
+                };
+                
+                request.onsuccess = function(event) {
+                    callback(event.target.result);
+                };
+                
+                request.onerror = function(event) {
+                    console.error('IndexedDB hatası:', event.target.error);
+                    alert('Veritabanı hatası: ' + event.target.error);
+                };
+            }
+            
+            function savePdfToIndexedDB(file) {
+                getDB(function(db) {
+                    const transaction = db.transaction(['pdfs'], 'readwrite');
+                    const store = transaction.objectStore('pdfs');
+                    
+                    const pdfData = {
+                        name: file.name,
+                        file: file,
+                        date: new Date().toISOString()
+                    };
+                    
+                    const request = store.add(pdfData);
+                    
+                    request.onsuccess = function() {
+                        loadPdfList();
+                    };
+                    
+                    request.onerror = function(event) {
+                        console.error('PDF kaydedilemedi:', event.target.error);
+                        alert('PDF kaydedilemedi: ' + event.target.error);
+                        loadPdfList();
+                    };
+                });
+            }
+            
+            function getPdfsFromIndexedDB(callback) {
+                getDB(function(db) {
+                    const transaction = db.transaction(['pdfs'], 'readonly');
+                    const store = transaction.objectStore('pdfs');
+                    const request = store.getAll();
+                    
+                    request.onsuccess = function(event) {
+                        callback(event.target.result || []);
+                    };
+                    
+                    request.onerror = function(event) {
+                        console.error('PDF\'ler alınamadı:', event.target.error);
+                        alert('PDF\'ler alınamadı: ' + event.target.error);
+                        callback([]);
+                    };
+                });
+            }
+            
+            function getPdfFromIndexedDB(id, callback) {
+                getDB(function(db) {
+                    const transaction = db.transaction(['pdfs'], 'readonly');
+                    const store = transaction.objectStore('pdfs');
+                    const request = store.get(Number(id));
+                    
+                    request.onsuccess = function(event) {
+                        callback(event.target.result ? event.target.result.file : null);
+                    };
+                    
+                    request.onerror = function(event) {
+                        console.error('PDF alınamadı:', event.target.error);
+                        alert('PDF alınamadı: ' + event.target.error);
+                        callback(null);
+                    };
+                });
+            }
+            
+            function deletePdfFromIndexedDB(id, callback) {
+                getDB(function(db) {
+                    const transaction = db.transaction(['pdfs'], 'readwrite');
+                    const store = transaction.objectStore('pdfs');
+                    const request = store.delete(Number(id));
+                    
+                    request.onsuccess = function() {
+                        if (callback) callback();
+                    };
+                    
+                    request.onerror = function(event) {
+                        console.error('PDF silinemedi:', event.target.error);
+                        alert('PDF silinemedi: ' + event.target.error);
+                    };
+                });
+            }
+        });
+    </script>
+</body>
+</html>
