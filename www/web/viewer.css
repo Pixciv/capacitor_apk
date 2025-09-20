@@ -7309,6 +7309,6 @@ dialog :link{
     justify-content: space-around;
     align-items: center;
 
-    margin-top: 10%;    /* status bar ile çakışmayı önler */
+    margin-top: 8%;    /* status bar ile çakışmayı önler */
   }
 }
