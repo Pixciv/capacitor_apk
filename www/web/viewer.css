@@ -13,6 +13,51 @@
  * limitations under the License.
  */
 
+
+
+/* Mevcut stillerin üzerine ekle */
+#toolbarContainer {
+    top: 0 !important;
+    height: 40px !important;
+}
+
+#sidebarContainer {
+    top: 40px !important;
+    height: calc(100% - 40px) !important;
+}
+
+#mainContainer {
+    top: 40px !important;
+    height: calc(100% - 40px) !important;
+}
+
+#viewerContainer {
+    top: 0 !important;
+}
+
+/* Mobil uyumluluk için */
+@media (max-width: 768px) {
+    #toolbarViewer {
+        padding: 5px 10px !important;
+    }
+    
+    .toolbarButton {
+        margin: 0 5px !important;
+        padding: 8px !important;
+    }
+}
+
+/* Status bar ile çakışmayı önle */
+html, body {
+    height: 100% !important;
+    overflow: hidden !important;
+}
+
+#viewerContainer {
+    padding-bottom: env(safe-area-inset-bottom) !important;
+}
+
+
 .messageBar{
   --closing-button-icon:url(images/messageBar_closingButton.svg);
   --message-bar-close-button-color:var(--text-primary-color);
