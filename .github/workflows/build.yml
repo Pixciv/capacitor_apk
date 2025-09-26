@@ -1,0 +1,28 @@
+name: Unpack Full Repo
+
+on:
+  workflow_dispatch:  # Manuel tetikleme
+
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout (repo küçük, boş olabilir)
+      - uses: actions/checkout@v3
+
+      # Google Drive'dan tar.gz indir
+      - name: Download full repo archive
+        uses: machine-learning-apps/gdrive-download-action@v1
+        with:
+          file_id: 1SU8ystnoZsl4WgJkR2v8eGrfG9mlE1AG
+          destination: capacitor_apk_full.tar.gz
+
+      # Arşivi aç
+      - name: Extract full repo
+        run: |
+          tar -xzf capacitor_apk_full.tar.gz
+          # Eğer arşiv kendi içinde 'capacitor_apk' klasörü içeriyorsa
+          if [ -d capacitor_apk ]; then
+            mv capacitor_apk/* ./
+            rm -rf capacitor_apk
+          fi
