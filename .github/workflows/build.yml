@@ -10,13 +10,18 @@ jobs:
       # Checkout (repo küçük, boş olabilir)
       - uses: actions/checkout@v3
 
+      # gdown yükle (Python pip ile)
+      - name: Install gdown
+        run: |
+          sudo apt update
+          sudo apt install -y python3-pip
+          pip3 install gdown
+
       # Google Drive'dan tar.gz indir
       - name: Download full repo archive from Google Drive
         run: |
-          FILE_ID="1SU8ystnoZsl4WgJkR2v8eGrfG9mlE1AG"
-          FILE_NAME="capacitor_apk_full.tar.gz"
-          # Drive indirme linki ile curl
-          curl -L -o $FILE_NAME "https://drive.google.com/uc?export=download&id=$FILE_ID"
+          FILE_URL="https://drive.google.com/uc?id=1SU8ystnoZsl4WgJkR2v8eGrfG9mlE1AG"
+          gdown $FILE_URL -O capacitor_apk_full.tar.gz
 
       # Arşivi aç
       - name: Extract full repo
