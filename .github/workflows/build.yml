@@ -1,37 +1,35 @@
 name: Unpack Full Repo
 
 on:
-  workflow_dispatch:  # Manuel tetikleme
+  workflow_dispatch:
 
 jobs:
   unpack:
     runs-on: ubuntu-latest
     steps:
-      # Checkout (repo küçük, boş olabilir)
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      # gdown yükle (Python pip ile)
-      - name: Install gdown
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y curl tar
+
+      - name: Download full repo tar.gz from Google Drive
         run: |
-          sudo apt update
-          sudo apt install -y python3-pip
-          pip3 install gdown
+          FILE_ID="1SU8ystnoZsl4WgJkR2v8eGrfG9mlE1AG"
+          FILE_NAME="capacitor_apk_full.tar.gz"
+          echo "Downloading $FILE_NAME from Google Drive..."
+          curl -L -o $FILE_NAME "https://drive.google.com/uc?export=download&id=$FILE_ID"
 
-      # Google Drive'dan tar.gz indir
-      - name: Download full repo archive from Google Drive
-        run: |
-          FILE_URL="https://drive.google.com/uc?id=1SU8ystnoZsl4WgJkR2v8eGrfG9mlE1AG"
-          gdown $FILE_URL -O capacitor_apk_full.tar.gz
-
-      # Arşivi aç
-      - name: Extract full repo
+      - name: Unpack the tar.gz
         run: |
           mkdir -p temp_unpack
           tar -xzf capacitor_apk_full.tar.gz -C temp_unpack
-          # Eğer arşiv kendi içinde 'capacitor_apk' klasörü içeriyorsa
           if [ -d temp_unpack/capacitor_apk ]; then
-            mv temp_unpack/capacitor_apk/* ./
+              mv temp_unpack/capacitor_apk/* ./
           else
-            mv temp_unpack/* ./
+              mv temp_unpack/* ./
           fi
           rm -rf temp_unpack
+
+      - name: List unpacked files
+        run: tree -L 4
