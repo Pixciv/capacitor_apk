@@ -11,18 +11,22 @@ jobs:
       - uses: actions/checkout@v3
 
       # Google Drive'dan tar.gz indir
-      - name: Download full repo archive
-        uses: machine-learning-apps/gdrive-download-action@v1
-        with:
-          file_id: 1SU8ystnoZsl4WgJkR2v8eGrfG9mlE1AG
-          destination: capacitor_apk_full.tar.gz
+      - name: Download full repo archive from Google Drive
+        run: |
+          FILE_ID="1SU8ystnoZsl4WgJkR2v8eGrfG9mlE1AG"
+          FILE_NAME="capacitor_apk_full.tar.gz"
+          # Drive indirme linki ile curl
+          curl -L -o $FILE_NAME "https://drive.google.com/uc?export=download&id=$FILE_ID"
 
       # Arşivi aç
       - name: Extract full repo
         run: |
-          tar -xzf capacitor_apk_full.tar.gz
+          mkdir -p temp_unpack
+          tar -xzf capacitor_apk_full.tar.gz -C temp_unpack
           # Eğer arşiv kendi içinde 'capacitor_apk' klasörü içeriyorsa
-          if [ -d capacitor_apk ]; then
-            mv capacitor_apk/* ./
-            rm -rf capacitor_apk
+          if [ -d temp_unpack/capacitor_apk ]; then
+            mv temp_unpack/capacitor_apk/* ./
+          else
+            mv temp_unpack/* ./
           fi
+          rm -rf temp_unpack
