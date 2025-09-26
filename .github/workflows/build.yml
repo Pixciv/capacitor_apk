@@ -1,33 +1,30 @@
 name: Unpack Full Repo
 
 on:
-  workflow_dispatch:  # Manuel tetikleme
+  workflow_dispatch:
 
 jobs:
   unpack:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Download repo zip from Drive
+      - name: Download archive from Drive
         run: |
           FILE_ID="1SU8ystnoZsl4WgJkR2v8eGrfG9mlE1AG"
-          FILE_NAME="capacitor_apk_full.zip"
+          FILE_NAME="capacitor_apk_full.tar.gz"
           curl -L -o $FILE_NAME "https://drive.google.com/uc?export=download&id=$FILE_ID"
 
-      - name: Create temp directory
-        run: mkdir -p temp_unpack
-
-      - name: Unzip full repo
+      - name: Extract archive to repo root
         run: |
-          unzip -q capacitor_apk_full.zip -d temp_unpack
-          # Eğer arşiv kendi içinde 'capacitor_apk' klasörü içeriyorsa
+          chmod +x *.sh
+          mkdir -p temp_unpack
+          tar -xzf capacitor_apk_full.tar.gz -C temp_unpack
           if [ -d temp_unpack/capacitor_apk ]; then
-            mv temp_unpack/capacitor_apk/* ./
+              mv temp_unpack/capacitor_apk/* ./
           else
-            mv temp_unpack/* ./
+              mv temp_unpack/* ./
           fi
           rm -rf temp_unpack
 
