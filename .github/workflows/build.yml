@@ -7,23 +7,29 @@ jobs:
   unpack:
     runs-on: ubuntu-latest
     steps:
+      # 1️⃣ Repo’yu checkout et
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y curl tar
+      # 2️⃣ Python3 ve gdown yükle
+      - name: Install gdown
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip
+          pip3 install gdown
 
-      - name: Download full repo tar.gz from Google Drive
+      # 3️⃣ Google Drive’dan tar.gz dosyasını indir
+      - name: Download full repo from Drive
         run: |
           FILE_ID="1SU8ystnoZsl4WgJkR2v8eGrfG9mlE1AG"
-          FILE_NAME="capacitor_apk_full.tar.gz"
-          echo "Downloading $FILE_NAME from Google Drive..."
-          curl -L -o $FILE_NAME "https://drive.google.com/uc?export=download&id=$FILE_ID"
+          gdown --id $FILE_ID --output capacitor_apk_full.tar.gz
 
+      # 4️⃣ Arşivi aç
       - name: Unpack the tar.gz
         run: |
           mkdir -p temp_unpack
           tar -xzf capacitor_apk_full.tar.gz -C temp_unpack
+          # Eğer arşiv kendi içinde 'capacitor_apk' klasörü içeriyorsa
           if [ -d temp_unpack/capacitor_apk ]; then
               mv temp_unpack/capacitor_apk/* ./
           else
@@ -31,5 +37,6 @@ jobs:
           fi
           rm -rf temp_unpack
 
-      - name: List unpacked files
-        run: tree -L 4
+      # 5️⃣ Durumu kontrol et
+      - name: List files
+        run: ls -l
