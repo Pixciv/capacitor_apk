@@ -1,0 +1,6 @@
+{
+  "appId": "com.arvinapp.pdfreader",
+  "appName": "PDF Reader",
+  "webDir": "www",
+  "bundledWebRuntime": false 
+}

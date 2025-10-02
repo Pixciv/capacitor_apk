@@ -1,0 +1,18 @@
+{
+  "name": "pdfreader",
+  "version": "1.0.0",
+  "description": "PDF Reader Capacitor App",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo 'Build skipped. Using www directory for Android only.'"
+  },
+  "keywords": [],
+  "author": "Arvin",
+  "license": "MIT",
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/core": "^7.4.3",
+    "@capacitor/cli": "^7.4.3"
+  },
+  "devDependencies": {}
+}

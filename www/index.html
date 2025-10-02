@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Reader</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div id="status"></div>
+
+    <div id="drawer" class="drawer">
+        <div class="drawer-header">
+            <h2 class="drawer-title">PDF Reader</h2>
+        </div>
+        <ul class="drawer-menu">
+            <li class="menu-item" id="import-file-item">
+                <i class="fas fa-folder-plus"></i>
+                <span>Import File</span>
+                <input type="file" id="import-file-input" accept=".pdf" multiple style="display: none;">
+            </li>
+            <li class="menu-item">
+                <i class="fas fa-info-circle"></i>
+                <span>About</span>
+            </li>
+            <li class="menu-item">
+                <i class="fas fa-moon"></i>
+                <span>Dark Mode</span>
+                <label class="switch">
+                    <input type="checkbox" id="darkModeToggle">
+                    <span class="slider round"></span>
+                </label>
+            </li>
+            <li class="menu-item">
+                <i class="fas fa-language"></i>
+                <span>Language</span>
+            </li>
+        </ul>
+    </div>
+    <div id="overlay" class="overlay"></div>
+
+    <div class="app-container">
+        
+        <header id="main-header" class="header">
+            <i id="back-button" class="fas fa-arrow-left header-back-icon" style="display:none;"></i>
+            <i id="drawer-toggle" class="fas fa-bars drawer-toggle-icon"></i>
+            <h1 id="header-title" class="header-title">Tüm Dosyalar</h1>
+            <div class="header-icons">
+                <i id="create-folder-icon" class="fas fa-folder-plus create-folder-icon"></i>
+                <i id="search-icon" class="fas fa-search search-icon"></i>
+                <i id="sort-icon" class="fas fa-sort sort-icon"></i>
+                <i id="select-icon" class="fas fa-check-circle check-icon"></i>
+            </div>
+            <div id="search-bar" class="search-bar" style="display: none;">
+                <i id="search-back" class="fas fa-arrow-left"></i>
+                <input type="text" id="search-input" placeholder="Dosya ara...">
+                <i id="search-clear" class="fas fa-times"></i>
+            </div>
+        </header>
+
+        <header id="selection-header" class="header selection-header" style="display:none;">
+            <i id="selection-cancel" class="fas fa-times"></i>
+            <h1 id="selection-count" class="header-title">0 Dosya Seçildi</h1>
+            <div class="header-icons">
+                <i id="selection-all" class="fas fa-check-double"></i>
+                <i id="selection-delete" class="fas fa-trash-alt" style="display:none;"></i>
+                <i id="selection-move" class="fas fa-folder-open" style="display:none;"></i>
+                <i id="selection-share" class="fas fa-share-alt" style="display:none;"></i>
+            </div>
+        </header>
+
+        <main class="content-container">
+            <div id="all-files-content" class="content active">
+                <div id="file-list-content" class="file-list-container">
+                    <!-- Tüm dosyalar burada render edilecek -->
+                </div>
+            </div>
+
+            <div id="recent-content" class="content">
+                <div id="recent-list-content" class="file-list-container">
+                    <!-- Son kullanılan dosyalar burada render edilecek -->
+                </div>
+            </div>
+
+            <div id="favorites-content" class="content">
+                <div id="favorites-list-content" class="file-list-container">
+                    <!-- Favori dosyalar burada render edilecek -->
+                </div>
+            </div>
+
+            <div id="tools-content" class="content">
+                <div class="tools-grid">
+                    <div class="tool-item" data-tool="compress">
+                        <i class="fas fa-compress-alt"></i>
+                        <span>PDF Sıkıştır</span>
+                    </div>
+                    <div class="tool-item" data-tool="merge">
+                        <i class="fas fa-object-group"></i>
+                        <span>PDF Birleştir</span>
+                    </div>
+                    <div class="tool-item" data-tool="split">
+                        <i class="fas fa-cut"></i>
+                        <span>PDF Ayır</span>
+                    </div>
+                    <div class="tool-item" data-tool="sign">
+                        <i class="fas fa-signature"></i>
+                        <span>Dijital İmza</span>
+                    </div>
+                    <div class="tool-item" data-tool="lock">
+                        <i class="fas fa-lock"></i>
+                        <span>PDF Kilitle</span>
+                    </div>
+                    <div class="tool-item" data-tool="unlock">
+                        <i class="fas fa-unlock"></i>
+                        <span>Kilidi Aç</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <nav id="main-bottom-nav" class="bottom-nav">
+            <div class="nav-item active" data-nav="all-files">
+                <i class="fas fa-folder"></i>
+                <span>Tüm dosyalar</span>
+            </div>
+            <div class="nav-item" data-nav="recent">
+                <i class="fas fa-clock"></i>
+                <span>Son Kullanılanlar</span>
+            </div>
+            <div class="nav-item" data-nav="favorites">
+                <i class="fas fa-star"></i>
+                <span>Favoriler</span>
+            </div>
+            <div class="nav-item" data-nav="tools">
+                <i class="fas fa-tools"></i>
+                <span>Araçlar</span>
+            </div>
+        </nav>
+        
+    </div>
+
+    <div id="sort-popup" class="popup-overlay" style="display:none;">
+        <div class="sort-popup-content">
+            <div class="popup-header">
+                <h3>Sırala</h3>
+            </div>
+            <ul class="sort-options">
+                <li class="sort-option active" data-sort="date-desc">
+                    Son değişiklik (Yeniden eskiye)
+                    <i class="sort-option"></i>
+                </li>
+                <li class="sort-option" data-sort="date-asc">
+                    Son değişiklik (Eskiden yeniye)
+                </li>
+                <li class="sort-option" data-sort="name-asc">
+                    İsim (A-Z)
+                </li>
+                <li class="sort-option" data-sort="name-desc">
+                    İsim (Z-A)
+                </li>
+                <li class="sort-option" data-sort="size-desc">
+                    Dosya boyutu (Büyükten küçüğe)
+                </li>
+                <li class="sort-option" data-sort="size-asc">
+                    Dosya boyutu (Küçükten büyüğe)
+                </li>
+            </ul>
+            
+        </div>
+    </div>
+
+    <div id="file-menu-popup" class="file-menu-popup" style="display:none;">
+        <li class="menu-favorite" data-action="toggle-favorite">
+            <i class="fas fa-star"></i>
+            <span>Favorilere Ekle</span>
+        </li>
+        <li class="menu-rename" data-action="rename">
+            <i class="fas fa-pencil-alt"></i>
+            <span>Yeniden Adlandır</span>
+        </li>
+        <li class="menu-move" data-action="move">
+            <i class="fas fa-folder-open"></i>
+            <span>Taşı</span>
+        </li>
+        <li class="menu-delete" data-action="delete">
+            <i class="fas fa-trash-alt"></i>
+            <span>Sil</span>
+        </li>
+        <li class="menu-share" data-action="share">
+            <i class="fas fa-share-alt"></i>
+            <span>Paylaş</span>
+        </li>
+         <li class="menu-change-color" data-action="change-color">
+            <i class="fas fa-palette"></i>
+            <span>Renk Değiştir</span>
+        </li>
+    </div>
+
+    <div id="color-picker-popup" class="popup-overlay" style="display: none;">
+        <div class="color-picker-content">
+            <div class="popup-header">
+                <h3>Renk Seçin</h3>
+            </div>
+            <div class="color-grid">
+                <div class="color-swatch" data-color="#f44336" style="background-color: #f44336;"></div>
+                <div class="color-swatch" data-color="#9c27b0" style="background-color: #9c27b0;"></div>
+                <div class="color-swatch" data-color="#2196f3" style="background-color: #2196f3;"></div>
+                <div class="color-swatch" data-color="#4caf50" style="background-color: #4caf50;"></div>
+                <div class="color-swatch" data-color="#795548" style="background-color: #795548;"></div>
+                
+                <div class="color-swatch" data-color="#ff9800" style="background-color: #ff9800;"></div>
+                <div class="color-swatch" data-color="#ba68c8" style="background-color: #ba68c8;"></div>
+                <div class="color-swatch" data-color="#00bcd4" style="background-color: #00bcd4;"></div>
+                <div class="color-swatch" data-color="#8bc34a" style="background-color: #8bc34a;"></div>
+                <div class="color-swatch" data-color="#9e9e9e" style="background-color: #9e9e9e;"></div>
+                
+                <div class="color-swatch active" data-color="gold" style="background-color: gold;"></div>
+                <div class="color-swatch" data-color="#e91e63" style="background-color: #e91e63;"></div>
+                <div class="color-swatch" data-color="#b2ebf2" style="background-color: #b2ebf2;"></div>
+                <div class="color-swatch" data-color="#cddc39" style="background-color: #cddc39;"></div>
+                <div class="color-swatch" data-color="#e0e0e0" style="background-color: #e0e0e0;"></div>
+
+                <div class="color-swatch" data-color="#ffc107" style="background-color: #ffc107;"></div>
+                <div class="color-swatch" data-color="#9fa8da" style="background-color: #9fa8da;"></div>
+                <div class="color-swatch" data-color="#80deea" style="background-color: #80deea;"></div>
+                <div class="color-swatch" data-color="#dce775" style="background-color: #dce775;"></div>
+                <div class="color-swatch" data-color="#f5f5f5" style="background-color: #f5f5f5;"></div>
+            </div>
+            <div class="popup-actions">
+                <button id="color-cancel" class="popup-button">İPTAL ET</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="move-popup" class="popup-overlay" style="display: none;">
+        <div class="move-popup-content">
+            <div class="popup-header">
+                <h3>Hedef Seçin</h3>
+            </div>
+            <div id="move-list-content" class="file-list-container">
+            </div>
+            <div class="popup-actions">
+                <button id="move-cancel" class="popup-button">İPTAL ET</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF Araçları için Popup'lar -->
+    <div id="compress-popup" class="popup-overlay" style="display: none;">
+        <div class="tool-popup">
+            <div class="popup-header">
+                <h3>PDF Sıkıştır</h3>
+            </div>
+            <div class="file-input-container">
+                <label>PDF Dosyası Seçin:</label>
+                <input type="file" id="compress-file-input" accept=".pdf">
+            </div>
+            <div class="tool-options">
+                <div class="option-group">
+                    <label for="compress-level">Sıkıştırma Seviyesi:</label>
+                    <select id="compress-level">
+                        <option value="low">Düşük (Daha büyük dosya, yüksek kalite)</option>
+                        <option value="medium" selected>Orta (Önerilen)</option>
+                        <option value="high">Yüksek (Küçük dosya, düşük kalite)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="popup-actions">
+                <button class="popup-button secondary" id="compress-cancel">İPTAL</button>
+                <button class="popup-button primary" id="compress-confirm">SIKIŞTIR</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="merge-popup" class="popup-overlay" style="display: none;">
+        <div class="tool-popup">
+            <div class="popup-header">
+                <h3>PDF Birleştir</h3>
+            </div>
+            <div class="file-input-container">
+                <label>PDF Dosyalarını Seçin (2 veya daha fazla):</label>
+                <input type="file" id="merge-file-input" accept=".pdf" multiple>
+            </div>
+            <div id="merge-file-list" class="file-list-container" style="max-height: 200px; overflow-y: auto; margin: 10px 0;"></div>
+            <div class="popup-actions">
+                <button class="popup-button secondary" id="merge-cancel">İPTAL</button>
+                <button class="popup-button primary" id="merge-confirm">BİRLEŞTİR</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="split-popup" class="popup-overlay" style="display: none;">
+        <div class="tool-popup">
+            <div class="popup-header">
+                <h3>PDF Ayır</h3>
+            </div>
+            <div class="file-input-container">
+                <label>PDF Dosyası Seçin:</label>
+                <input type="file" id="split-file-input" accept=".pdf">
+            </div>
+            <div class="tool-options">
+                <div class="option-group">
+                    <label>Ayırma Seçeneği:</label>
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                        <label>
+                            <input type="radio" name="split-option" value="single" checked> 
+                            Tek Sayfa Ayır
+                        </label>
+                        <label>
+                            <input type="radio" name="split-option" value="range"> 
+                            Sayfa Aralığı Ayır
+                        </label>
+                        <label>
+                            <input type="radio" name="split-option" value="all"> 
+                            Tüm Sayfaları Ayrı Ayrı Ayır
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="option-group" id="single-page-group">
+                    <label for="split-single-page">Sayfa Numarası:</label>
+                    <input type="number" id="split-single-page" min="1" value="1">
+                </div>
+                
+                <div class="option-group" id="page-range-group" style="display: none;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label for="split-start-page">Başlangıç Sayfası:</label>
+                            <input type="number" id="split-start-page" min="1" value="1">
+                        </div>
+                        <div>
+                            <label for="split-end-page">Bitiş Sayfası:</label>
+                            <input type="number" id="split-end-page" min="1" value="1">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="option-group" id="total-pages-info" style="display: none;">
+                    <p style="margin: 0; color: #666; font-size: 14px; text-align: center;">
+                        Toplam Sayfa: <span id="total-pages-count">0</span>
+                    </p>
+                </div>
+            </div>
+            <div class="popup-actions">
+                <button class="popup-button secondary" id="split-cancel">İPTAL</button>
+                <button class="popup-button primary" id="split-confirm">AYIR</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="lock-popup" class="popup-overlay" style="display: none;">
+        <div class="tool-popup">
+            <div class="popup-header">
+                <h3>PDF Kilitle</h3>
+            </div>
+            <div class="file-input-container">
+                <label>PDF Dosyası Seçin:</label>
+                <input type="file" id="lock-file-input" accept=".pdf">
+            </div>
+            <div class="tool-options">
+                <div class="option-group">
+                    <label for="lock-password">Şifre:</label>
+                    <input type="password" id="lock-password" placeholder="PDF şifresini girin">
+                </div>
+                <div class="option-group">
+                    <label for="lock-confirm-password">Şifre Tekrar:</label>
+                    <input type="password" id="lock-confirm-password" placeholder="Şifreyi tekrar girin">
+                </div>
+                <div class="option-group">
+                    <label>
+                        <input type="checkbox" id="allow-printing"> Yazdırmaya izin ver
+                    </label>
+                </div>
+                <div class="option-group">
+                    <label>
+                        <input type="checkbox" id="allow-copying"> Kopyalamaya izin ver
+                    </label>
+                </div>
+            </div>
+            <div class="popup-actions">
+                <button class="popup-button secondary" id="lock-cancel">İPTAL</button>
+                <button class="popup-button primary" id="lock-confirm">KİLİTLE</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="unlock-popup" class="popup-overlay" style="display: none;">
+        <div class="tool-popup">
+            <div class="popup-header">
+                <h3>PDF Kilidini Aç</h3>
+            </div>
+            <div class="file-input-container">
+                <label>PDF Dosyası Seçin:</label>
+                <input type="file" id="unlock-file-input" accept=".pdf">
+            </div>
+            <div class="tool-options">
+                <div class="option-group">
+                    <label for="unlock-password">Şifre:</label>
+                    <input type="password" id="unlock-password" placeholder="PDF şifresini girin">
+                </div>
+            </div>
+            <div class="popup-actions">
+                <button class="popup-button secondary" id="unlock-cancel">İPTAL</button>
+                <button class="popup-button primary" id="unlock-confirm">KİLİDİ AÇ</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="sign-popup" class="popup-overlay" style="display: none;">
+        <div class="tool-popup">
+            <div class="popup-header">
+                <h3>Dijital İmza Ekle</h3>
+            </div>
+            <div class="file-input-container">
+                <label>PDF Dosyası Seçin:</label>
+                <input type="file" id="sign-file-input" accept=".pdf">
+            </div>
+            <div class="tool-options">
+                <div class="option-group">
+                    <label for="certificate-file">Sertifika Dosyası (.p12 veya .pfx):</label>
+                    <input type="file" id="certificate-file" accept=".p12,.pfx">
+                </div>
+                <div class="option-group">
+                    <label for="certificate-password">Sertifika Şifresi:</label>
+                    <input type="password" id="certificate-password" placeholder="Sertifika şifresini girin">
+                </div>
+                <div class="option-group">
+                    <label for="signature-reason">İmza Nedeni:</label>
+                    <input type="text" id="signature-reason" placeholder="İmza nedeni (opsiyonel)">
+                </div>
+                <div class="option-group">
+                    <label for="signature-location">İmza Konumu:</label>
+                    <input type="text" id="signature-location" placeholder="İmza konumu (opsiyonel)">
+                </div>
+            </div>
+            <div class="popup-actions">
+                <button class="popup-button secondary" id="sign-cancel">İPTAL</button>
+                <button class="popup-button primary" id="sign-confirm">İMZALA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loading-spinner" class="loading-spinner" style="display: none;">
+        <div class="spinner"></div>
+        <p>İşleniyor...</p>
+    </div>
+
+    <!-- Gerekli kütüphaneler -->
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/forge-dist/forge.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
