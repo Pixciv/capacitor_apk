@@ -2,5 +2,11 @@
   "appId": "com.arvinapp.pdfreader",
   "appName": "PDF Reader",
   "webDir": "www",
-  "bundledWebRuntime": false 
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "Share": {}
+  }
 }
