@@ -578,48 +578,64 @@ async function shareFiles(filesToShare) {
 }
 
 // Capacitor Paylaşım Fonksiyonu
+// --- GÜNCEL DOSYA PAYLAŞIM FONKSİYONU ---
+async function shareFiles(filesToShare) {
+    try {
+        // 1. Capacitor kontrolü - DOĞRU YÖNTEM
+        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Share) {
+            return await capacitorShare(filesToShare);
+        }
+        
+        // 2. Web Share API fallback
+        if (navigator.share) {
+            return await browserShare(filesToShare);
+        }
+        
+        // 3. Metin paylaşımı (son çare)
+        fallbackShare(filesToShare);
+        
+    } catch (error) {
+        console.error('Paylaşım hatası:', error);
+        
+        if (error.name !== 'AbortError') {
+            alert('Paylaşım sırasında bir hata oluştu: ' + error.message);
+        }
+    }
+}
+
+// CAPACITOR PAYLAŞIM - GÜNCEL
 async function capacitorShare(filesToShare) {
     const fileNames = filesToShare.map(fileName => {
         const file = allFiles.find(f => f.name === fileName);
         return file ? file.name : fileName;
     }).join(', ');
 
-    await SharePlugin.share({
+    // Capacitor Share pluginini doğru kullanım
+    await window.Capacitor.Plugins.Share.share({
         title: 'PDF Dosyaları',
         text: `PDF Reader uygulamasından ${filesToShare.length} dosya paylaşıyorum: ${fileNames}`,
-        url: 'file:///', // Android'de dosya paylaşımı için
+        url: 'file:///', // Android için
         dialogTitle: 'PDF Paylaş'
     });
     
     console.log('Capacitor paylaşım başarılı.');
 }
 
-// Tarayıcı Paylaşım Fonksiyonu
+// TARAYICI PAYLAŞIMI
 async function browserShare(filesToShare) {
     const fileObjects = [];
     
     for (const fileName of filesToShare) {
         const file = allFiles.find(f => f.name === fileName);
-        if (!file) continue;
+        if (!file || !file.data) continue;
 
-        if (file.isFolder) {
-            const folderFiles = allFiles.filter(f => f.parentFolder === fileName && !f.isFolder);
-            for (const childFile of folderFiles) {
-                if (childFile.data) {
-                    const blob = base64toBlob(childFile.data, 'application/pdf');
-                    fileObjects.push(new File([blob], childFile.name, { type: 'application/pdf' }));
-                }
-            }
-        } else {
-            if (file.data) {
-                const blob = base64toBlob(file.data, 'application/pdf');
-                fileObjects.push(new File([blob], file.name, { type: 'application/pdf' }));
-            }
-        }
+        // Base64'ten blob oluştur
+        const blob = base64toBlob(file.data, 'application/pdf');
+        fileObjects.push(new File([blob], file.name, { type: 'application/pdf' }));
     }
 
     if (fileObjects.length === 0) {
-        alert('Paylaşılacak dosya bulunamadı. Yalnızca Base64 verisi olan PDF dosyaları paylaşılabilir.');
+        alert('Paylaşılacak dosya bulunamadı.');
         return;
     }
 
@@ -637,6 +653,27 @@ async function browserShare(filesToShare) {
     }
 }
 
+// BASE64 to BLOB fonksiyonu
+function base64toBlob(base64, mimeType) {
+    const byteCharacters = atob(base64);
+    const byteArrays = [];
+    
+    for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+        const slice = byteCharacters.slice(offset, offset + 512);
+        const byteNumbers = new Array(slice.length);
+        
+        for (let i = 0; i < slice.length; i++) {
+            byteNumbers[i] = slice.charCodeAt(i);
+        }
+        
+        const byteArray = new Uint8Array(byteNumbers);
+        byteArrays.push(byteArray);
+    }
+    
+    return new Blob(byteArrays, { type: mimeType });
+}
+
+// METİN PAYLAŞIMI (fallback)
 function fallbackShare(filesToShare) {
     const fileNames = filesToShare.map(fileName => {
         const file = allFiles.find(f => f.name === fileName);
@@ -645,6 +682,7 @@ function fallbackShare(filesToShare) {
 
     const shareText = `Paylaşmak istediğim dosyalar: ${fileNames}\n\nBu dosyaları PDF Reader uygulamasından paylaşıyorum.`;
     
+    // Panoya kopyala
     if (navigator.clipboard) {
         navigator.clipboard.writeText(shareText).then(() => {
             alert(`Dosya isimleri panoya kopyalandı! Paylaşmak için yapıştırın.\n\n${shareText}`);
