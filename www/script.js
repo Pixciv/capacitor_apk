@@ -552,93 +552,116 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- GELİŞMİŞ DOSYA PAYLAŞIM FONKSİYONU ---
-    // --- GELİŞMİŞ DOSYA PAYLAŞIM FONKSİYONU - CAPACITOR UYUMLU ---
+// --- GERÇEK PDF PAYLAŞIM FONKSİYONU ---
 async function shareFiles(filesToShare) {
     try {
-        // Capacitor Share Plugin kontrolü
-        if (window.Capacitor && window.SharePlugin) {
-            return await capacitorShare(filesToShare);
+        console.log('Paylaşılacak dosyalar:', filesToShare);
+        
+        // Capacitor kontrolü
+        if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+            return await nativeShare(filesToShare);
         }
         
-        // Fallback: Tarayıcı paylaşımı
+        // Web paylaşımı
         if (navigator.share) {
-            return await browserShare(filesToShare);
+            return await webShare(filesToShare);
         }
         
-        // Son çare: metin paylaşımı
+        // Fallback
         fallbackShare(filesToShare);
         
     } catch (error) {
         console.error('Paylaşım hatası:', error);
-        
-        if (error.name !== 'AbortError') {
-            alert('Paylaşım sırasında bir hata oluştu: ' + error.message);
-        }
+        alert('Paylaşım sırasında bir hata oluştu: ' + error.message);
     }
 }
 
-// Capacitor Paylaşım Fonksiyonu
-// --- GÜNCEL DOSYA PAYLAŞIM FONKSİYONU ---
-async function shareFiles(filesToShare) {
-    try {
-        // 1. Capacitor kontrolü - DOĞRU YÖNTEM
-        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Share) {
-            return await capacitorShare(filesToShare);
-        }
-        
-        // 2. Web Share API fallback
-        if (navigator.share) {
-            return await browserShare(filesToShare);
-        }
-        
-        // 3. Metin paylaşımı (son çare)
-        fallbackShare(filesToShare);
-        
-    } catch (error) {
-        console.error('Paylaşım hatası:', error);
-        
-        if (error.name !== 'AbortError') {
-            alert('Paylaşım sırasında bir hata oluştu: ' + error.message);
-        }
-    }
-}
-
-// CAPACITOR PAYLAŞIM - GÜNCEL
-async function capacitorShare(filesToShare) {
-    const fileNames = filesToShare.map(fileName => {
+// NATIVE (CAPACITOR) PAYLAŞIM
+async function nativeShare(filesToShare) {
+    const Share = window.Capacitor.Plugins.Share;
+    const Filesystem = window.Capacitor.Plugins.Filesystem;
+    
+    const fileUrls = [];
+    
+    for (const fileName of filesToShare) {
         const file = allFiles.find(f => f.name === fileName);
-        return file ? file.name : fileName;
-    }).join(', ');
-
-    // Capacitor Share pluginini doğru kullanım
-    await window.Capacitor.Plugins.Share.share({
+        if (!file || !file.data) continue;
+        
+        try {
+            // Base64 veriyi dosyaya yaz
+            const filePath = `pdf_${Date.now()}_${file.name}`;
+            
+            // Dosyayı Filesystem'e yaz
+            await Filesystem.writeFile({
+                path: filePath,
+                data: file.data,
+                directory: FilesystemDirectory.Cache,
+                recursive: true
+            });
+            
+            // Dosya URI'sini al
+            const fileUri = await Filesystem.getUri({
+                path: filePath,
+                directory: FilesystemDirectory.Cache
+            });
+            
+            fileUrls.push(fileUri.uri);
+            
+        } catch (error) {
+            console.error(`Dosya yazma hatası (${file.name}):`, error);
+            throw new Error(`Dosya hazırlanamadı: ${file.name}`);
+        }
+    }
+    
+    if (fileUrls.length === 0) {
+        throw new Error('Paylaşılacak dosya bulunamadı');
+    }
+    
+    // Paylaşımı başlat
+    await Share.share({
         title: 'PDF Dosyaları',
-        text: `PDF Reader uygulamasından ${filesToShare.length} dosya paylaşıyorum: ${fileNames}`,
-        url: 'file:///', // Android için
+        text: `PDF Reader - ${filesToShare.length} dosya`,
+        files: fileUrls,
         dialogTitle: 'PDF Paylaş'
     });
     
-    console.log('Capacitor paylaşım başarılı.');
+    console.log('Native paylaşım başarılı');
 }
 
-// TARAYICI PAYLAŞIMI
-async function browserShare(filesToShare) {
+// WEB PAYLAŞIMI
+async function webShare(filesToShare) {
     const fileObjects = [];
     
     for (const fileName of filesToShare) {
         const file = allFiles.find(f => f.name === fileName);
         if (!file || !file.data) continue;
 
-        // Base64'ten blob oluştur
-        const blob = base64toBlob(file.data, 'application/pdf');
-        fileObjects.push(new File([blob], file.name, { type: 'application/pdf' }));
+        // Base64'ten PDF blob oluştur
+        const byteCharacters = atob(file.data);
+        const byteArrays = [];
+        
+        for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+            const slice = byteCharacters.slice(offset, offset + 512);
+            const byteNumbers = new Array(slice.length);
+            
+            for (let i = 0; i < slice.length; i++) {
+                byteNumbers[i] = slice.charCodeAt(i);
+            }
+            
+            const byteArray = new Uint8Array(byteNumbers);
+            byteArrays.push(byteArray);
+        }
+        
+        const blob = new Blob(byteArrays, { type: 'application/pdf' });
+        const fileObj = new File([blob], file.name, { type: 'application/pdf' });
+        fileObjects.push(fileObj);
     }
-
+    
     if (fileObjects.length === 0) {
-        alert('Paylaşılacak dosya bulunamadı.');
-        return;
+        throw new Error('Paylaşılacak PDF bulunamadı');
     }
-
+    
+    // Web Share API kontrolü
     if (navigator.canShare && navigator.canShare({ files: fileObjects })) {
         await navigator.share({
             files: fileObjects,
@@ -646,46 +669,21 @@ async function browserShare(filesToShare) {
             text: `PDF Reader uygulamasından ${fileObjects.length} dosya paylaşıyorum.`
         });
         
-        console.log('Tarayıcı paylaşım başarılı.');
-        alert(`${fileObjects.length} dosya başarıyla paylaşıldı!`);
+        alert(`${fileObjects.length} PDF dosyası başarıyla paylaşıldı!`);
     } else {
-        fallbackShare(filesToShare);
+        throw new Error('Bu tarayıcı dosya paylaşımını desteklemiyor');
     }
 }
 
-// BASE64 to BLOB fonksiyonu
-function base64toBlob(base64, mimeType) {
-    const byteCharacters = atob(base64);
-    const byteArrays = [];
-    
-    for (let offset = 0; offset < byteCharacters.length; offset += 512) {
-        const slice = byteCharacters.slice(offset, offset + 512);
-        const byteNumbers = new Array(slice.length);
-        
-        for (let i = 0; i < slice.length; i++) {
-            byteNumbers[i] = slice.charCodeAt(i);
-        }
-        
-        const byteArray = new Uint8Array(byteNumbers);
-        byteArrays.push(byteArray);
-    }
-    
-    return new Blob(byteArrays, { type: mimeType });
-}
-
-// METİN PAYLAŞIMI (fallback)
+// FALLBACK PAYLAŞIM
 function fallbackShare(filesToShare) {
-    const fileNames = filesToShare.map(fileName => {
-        const file = allFiles.find(f => f.name === fileName);
-        return file ? file.name : fileName;
-    }).join(', ');
-
-    const shareText = `Paylaşmak istediğim dosyalar: ${fileNames}\n\nBu dosyaları PDF Reader uygulamasından paylaşıyorum.`;
+    const fileNames = filesToShare.join(', ');
+    const shareText = `Paylaşmak istediğim PDF dosyaları: ${fileNames}\n\nBu dosyaları PDF Reader uygulamasından paylaşıyorum.`;
     
-    // Panoya kopyala
-    if (navigator.clipboard) {
+    // Panoya kopyala veya direkt göster
+    if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(shareText).then(() => {
-            alert(`Dosya isimleri panoya kopyalandı! Paylaşmak için yapıştırın.\n\n${shareText}`);
+            alert(`PDF dosya isimleri panoya kopyalandı! Paylaşmak için yapıştırın.\n\n${shareText}`);
         }).catch(() => {
             alert(shareText);
         });
