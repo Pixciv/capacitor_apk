@@ -31,8 +31,11 @@ jobs:
       - name: Install Capacitor CLI globally
         run: npm install -g @capacitor/cli@latest
 
-      - name: Install only production dependencies
-        run: npm install --production
+      - name: Install dependencies (including filesystem)
+        run: npm install
+
+      - name: Install Capacitor Filesystem
+        run: npm install @capacitor/filesystem
 
       - name: Sync Capacitor
         run: npx cap sync
