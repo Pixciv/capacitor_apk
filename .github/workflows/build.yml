@@ -31,11 +31,17 @@ jobs:
       - name: Install Capacitor CLI globally
         run: npm install -g @capacitor/cli@latest
 
-      - name: Install dependencies (including filesystem)
+      - name: Install dependencies
         run: npm install
 
       - name: Install Capacitor Filesystem
         run: npm install @capacitor/filesystem
+
+      - name: Update minSdkVersion to 23
+        run: |
+          sed -i 's/minSdk 22/minSdk 23/g' android/app/build.gradle
+          sed -i 's/minSdkVersion 22/minSdkVersion 23/g' android/app/build.gradle
+          sed -i 's/minSdk = 22/minSdk = 23/g' android/app/build.gradle
 
       - name: Sync Capacitor
         run: npx cap sync
